@@ -7,6 +7,11 @@ import * as THREE from "three";
 import type { Tool } from "@/src/lib/tools";
 import { toolCategories } from "@/src/lib/tools";
 import { StationLabel } from "@/components/shared/station-label";
+import {
+  QUALITY_SETTINGS,
+  useDeviceQuality,
+  useSceneActivity,
+} from "@/src/lib/use-device-quality";
 
 function AnimatedGroup({
   children,
@@ -471,16 +476,19 @@ function CameraReset({
   reduceMotion: boolean;
 }) {
   const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
   const controls = useThree((state) => state.controls) as
     | { target: THREE.Vector3; update: () => void }
     | null;
 
   useEffect(() => {
     if (!controls) return;
-    camera.position.set(0, 6.8, 11.6);
+    const large =
+      size.width >= 2560 ? 1.3 : size.width >= 1920 ? 1.14 : 1;
+    camera.position.set(0, 6.8 * large, 11.6 * large);
     controls.target.set(0, 0.9, 0);
     controls.update();
-  }, [resetSignal, controls, camera, reduceMotion]);
+  }, [resetSignal, controls, camera, reduceMotion, size.width]);
 
   return null;
 }
@@ -498,76 +506,85 @@ export default function ShowroomCanvas({
   resetSignal?: number;
   reduceMotion?: boolean;
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const quality = useDeviceQuality();
+  const settings = QUALITY_SETTINGS[quality];
+  const active = useSceneActivity(containerRef);
+
   return (
-    <Canvas
-      shadows={{ type: THREE.PCFShadowMap }}
-      dpr={[1, 1.7]}
-      camera={{ position: [0, 6.8, 11.6], fov: 42, near: 0.1, far: 80 }}
-      gl={{ antialias: true, powerPreference: "high-performance" }}
-      className="!absolute inset-0"
-      onPointerMissed={() => undefined}
-    >
-      <color attach="background" args={["#f5f5f2"]} />
-      <fog attach="fog" args={["#f5f5f2", 20, 40]} />
-      <ambientLight intensity={0.75} />
-      <hemisphereLight args={["#ffffff", "#ddd8cb", 1.05]} />
-      <directionalLight
-        position={[5, 10, 7]}
-        intensity={2.1}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
-      />
-      <directionalLight position={[-6, 6, -5]} intensity={0.7} color="#FFD54F" />
-      <pointLight position={[0, 6, 2]} color="#FFD54F" intensity={26} distance={16} decay={2} />
+    <div ref={containerRef} className="!absolute inset-0">
+      <Canvas
+        shadows={settings.shadows ? { type: THREE.PCFShadowMap } : false}
+        dpr={settings.dpr}
+        frameloop={active ? "always" : "demand"}
+        performance={{ min: 0.4 }}
+        camera={{ position: [0, 6.8, 11.6], fov: 42, near: 0.1, far: 80 }}
+        gl={{ antialias: true, powerPreference: "high-performance" }}
+        className="!absolute inset-0"
+        onPointerMissed={() => undefined}
+      >
+        <color attach="background" args={["#f5f5f2"]} />
+        <fog attach="fog" args={["#f5f5f2", 20, 40]} />
+        <ambientLight intensity={0.75} />
+        <hemisphereLight args={["#ffffff", "#ddd8cb", 1.05]} />
+        <directionalLight
+          position={[5, 10, 7]}
+          intensity={2.1}
+          castShadow={settings.shadows}
+          shadow-mapSize={[settings.shadowMap, settings.shadowMap]}
+          shadow-camera-left={-12}
+          shadow-camera-right={12}
+          shadow-camera-top={12}
+          shadow-camera-bottom={-12}
+        />
+        <directionalLight position={[-6, 6, -5]} intensity={0.7} color="#FFD54F" />
+        <pointLight position={[0, 6, 2]} color="#FFD54F" intensity={26} distance={16} decay={2} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -0.5]} receiveShadow>
-        <planeGeometry args={[38, 28]} />
-        <meshStandardMaterial color="#f4f4f0" roughness={0.82} metalness={0.08} />
-      </mesh>
-      <gridHelper args={[32, 40, "#e3c987", "#e2dfd6"]} position={[0, 0.002, -0.5]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, -0.5]}>
-        <ringGeometry args={[6.9, 6.96, 96]} />
-        <meshBasicMaterial color="#FFB900" transparent opacity={0.5} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.003, -0.5]}>
-        <ringGeometry args={[7.3, 7.32, 96]} />
-        <meshBasicMaterial color="#FFC107" transparent opacity={0.2} />
-      </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -0.5]} receiveShadow>
+          <planeGeometry args={[38, 28]} />
+          <meshStandardMaterial color="#f4f4f0" roughness={0.82} metalness={0.08} />
+        </mesh>
+        <gridHelper args={[32, 40, "#e3c987", "#e2dfd6"]} position={[0, 0.002, -0.5]} />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, -0.5]}>
+          <ringGeometry args={[6.9, 6.96, 96]} />
+          <meshBasicMaterial color="#FFB900" transparent opacity={0.5} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.003, -0.5]}>
+          <ringGeometry args={[7.3, 7.32, 96]} />
+          <meshBasicMaterial color="#FFC107" transparent opacity={0.2} />
+        </mesh>
 
-      <Suspense fallback={null}>
-        {items.map((tool, index) => (
-          <Podium
-            key={tool.id}
-            tool={tool}
-            index={index}
-            onSelect={onSelect}
-            reduceMotion={reduceMotion}
-            selected={false}
-          />
-        ))}
-      </Suspense>
+        <Suspense fallback={null}>
+          {items.map((tool, index) => (
+            <Podium
+              key={tool.id}
+              tool={tool}
+              index={index}
+              onSelect={onSelect}
+              reduceMotion={reduceMotion}
+              selected={false}
+            />
+          ))}
+        </Suspense>
 
-      <OrbitControls
-        makeDefault
-        enableDamping
-        dampingFactor={0.06}
-        enablePan={false}
-        minDistance={5}
-        maxDistance={22}
-        minPolarAngle={0.28}
-        maxPolarAngle={1.42}
-        autoRotate={autoRotate && !reduceMotion}
-        autoRotateSpeed={0.45}
-        touches={{
-          ONE: THREE.TOUCH.ROTATE,
-          TWO: THREE.TOUCH.DOLLY_ROTATE,
-        }}
-      />
-      <CameraReset resetSignal={resetSignal} reduceMotion={reduceMotion} />
-    </Canvas>
+        <OrbitControls
+          makeDefault
+          enableDamping
+          dampingFactor={0.06}
+          enablePan={false}
+          minDistance={5}
+          maxDistance={22}
+          minPolarAngle={0.28}
+          maxPolarAngle={1.42}
+          autoRotate={autoRotate && !reduceMotion}
+          autoRotateSpeed={0.45}
+          touches={{
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_ROTATE,
+          }}
+        />
+        <CameraReset resetSignal={resetSignal} reduceMotion={reduceMotion} />
+      </Canvas>
+    </div>
   );
 }

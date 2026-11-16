@@ -7,6 +7,12 @@ import * as THREE from "three";
 import { labs, type Lab } from "@/src/lib/labs";
 import { LabModel } from "@/components/campus/lab-models";
 import { StationLabel } from "@/components/shared/station-label";
+import {
+  QUALITY_SETTINGS,
+  useDeviceQuality,
+  useSceneActivity,
+  type SceneQuality,
+} from "@/src/lib/use-device-quality";
 
 export const LAB_POSITIONS: Record<string, [number, number, number]> = {
   "arduino-lab": [-3.4, 0, -2.75],
@@ -53,6 +59,8 @@ function CameraRig({
     if (!controls) return;
     const base = selectedId ? LAB_POSITIONS[selectedId] : null;
     const mobile = size.width < 640;
+    const largeFrame =
+      size.width >= 2560 ? 1.34 : size.width >= 1920 ? 1.18 : 1;
     const target = base
       ? new THREE.Vector3(
           base[0] * (exploded ? 1.5 : 1),
@@ -61,9 +69,10 @@ function CameraRig({
         )
       : new THREE.Vector3(0, exploded ? 1.0 : 0.6, 0);
 
-    const distance = base
-      ? (mobile ? 13 : 9.5) + zoom * 1.1
-      : (mobile ? 25 : 19.5) + zoom * 1.6;
+    const distance =
+      (base
+        ? (mobile ? 13 : 9.5) + zoom * 1.1
+        : (mobile ? 25 : 19.5) + zoom * 1.6) * (base ? 1 : largeFrame);
     const direction = (base
       ? new THREE.Vector3(0.5, 0.62, 1)
       : new THREE.Vector3(0.72, 0.66, 1)
@@ -95,7 +104,9 @@ function CameraRig({
   return null;
 }
 
-function Ground() {
+function Ground({ quality }: { quality: SceneQuality }) {
+  const gridSegments = quality === "low" ? 28 : quality === "medium" ? 40 : 56;
+  const ringSegments = quality === "low" ? 48 : 96;
   return (
     <group>
       <mesh
@@ -107,15 +118,15 @@ function Ground() {
         <meshStandardMaterial color="#f6f6f1" roughness={0.92} metalness={0.02} />
       </mesh>
       <gridHelper
-        args={[42, 56, "#e0c98a", "#dedbd2"]}
+        args={[42, gridSegments, "#e0c98a", "#dedbd2"]}
         position={[0, -0.025, 0]}
       />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-        <ringGeometry args={[8.15, 8.22, 96]} />
+        <ringGeometry args={[8.15, 8.22, ringSegments]} />
         <meshBasicMaterial color="#FFB900" transparent opacity={0.5} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
-        <ringGeometry args={[8.3, 8.32, 96]} />
+        <ringGeometry args={[8.3, 8.32, ringSegments]} />
         <meshBasicMaterial color="#FFC107" transparent opacity={0.22} />
       </mesh>
     </group>
@@ -492,6 +503,7 @@ function Scene({
   zoom,
   resetSignal,
   reduceMotion,
+  quality,
 }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -500,7 +512,9 @@ function Scene({
   zoom: number;
   resetSignal: number;
   reduceMotion: boolean;
+  quality: SceneQuality;
 }) {
+  const settings = QUALITY_SETTINGS[quality];
   return (
     <>
       <color attach="background" args={["#f3f3ee"]} />
@@ -511,8 +525,8 @@ function Scene({
       <directionalLight
         position={[8, 13, 7]}
         intensity={2.4}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
+        castShadow={settings.shadows}
+        shadow-mapSize={[settings.shadowMap, settings.shadowMap]}
         shadow-camera-left={-14}
         shadow-camera-right={14}
         shadow-camera-top={14}
@@ -524,7 +538,7 @@ function Scene({
       <directionalLight position={[-7, 7, -6]} intensity={0.75} color="#FFD54F" />
       <pointLight position={[0, 5.5, 1]} intensity={42} distance={18} color="#FFD54F" decay={2} />
 
-      <Ground />
+      <Ground quality={quality} />
       <Pathways exploded={exploded} />
 
       {labs.map((lab, index) => (
@@ -539,15 +553,17 @@ function Scene({
         />
       ))}
 
-      <Sparkles
-        count={64}
-        scale={[18, 5, 18]}
-        size={1.7}
-        speed={0.25}
-        color="#FFC107"
-        opacity={0.55}
-        position={[0, 2, 0]}
-      />
+      {quality !== "low" && (
+        <Sparkles
+          count={settings.sparkles}
+          scale={[18, 5, 18]}
+          size={1.7}
+          speed={0.25}
+          color="#FFC107"
+          opacity={0.55}
+          position={[0, 2, 0]}
+        />
+      )}
 
       <OrbitControls
         makeDefault
@@ -593,26 +609,36 @@ export default function CampusCanvas({
   resetSignal?: number;
   reduceMotion?: boolean;
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const quality = useDeviceQuality();
+  const settings = QUALITY_SETTINGS[quality];
+  const active = useSceneActivity(containerRef);
+
   return (
-    <Canvas
-      dpr={[1, 1.75]}
-      shadows={{ type: THREE.PCFShadowMap }}
-      camera={{ position: [12, 10, 15], fov: 38, near: 0.1, far: 100 }}
-      gl={{ antialias: true, powerPreference: "high-performance" }}
-      onPointerMissed={() => onSelect(null)}
-      className="!absolute inset-0"
-    >
-      <Suspense fallback={null}>
-        <Scene
-          selectedId={selectedId}
-          onSelect={onSelect}
-          exploded={exploded}
-          autoRotate={autoRotate}
-          zoom={zoom}
-          resetSignal={resetSignal}
-          reduceMotion={reduceMotion}
-        />
-      </Suspense>
-    </Canvas>
+    <div ref={containerRef} className="!absolute inset-0">
+      <Canvas
+        dpr={settings.dpr}
+        shadows={settings.shadows ? { type: THREE.PCFShadowMap } : false}
+        frameloop={active ? "always" : "demand"}
+        performance={{ min: 0.4 }}
+        camera={{ position: [12, 10, 15], fov: 38, near: 0.1, far: 100 }}
+        gl={{ antialias: true, powerPreference: "high-performance" }}
+        onPointerMissed={() => onSelect(null)}
+        className="!absolute inset-0"
+      >
+        <Suspense fallback={null}>
+          <Scene
+            selectedId={selectedId}
+            onSelect={onSelect}
+            exploded={exploded}
+            autoRotate={autoRotate}
+            zoom={zoom}
+            resetSignal={resetSignal}
+            reduceMotion={reduceMotion}
+            quality={quality}
+          />
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }

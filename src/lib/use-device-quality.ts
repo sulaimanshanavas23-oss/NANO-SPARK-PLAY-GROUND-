@@ -27,6 +27,13 @@ function detectQuality(width: number): SceneQuality {
   return "high";
 }
 
+function stepDown(quality: SceneQuality): SceneQuality {
+  if (quality === "ultra") return "high";
+  if (quality === "high") return "medium";
+  if (quality === "medium") return "low";
+  return "low";
+}
+
 export function useDeviceQuality(): SceneQuality {
   const [quality, setQuality] = useState<SceneQuality>("high");
 
@@ -45,6 +52,36 @@ export function useDeviceQuality(): SceneQuality {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let frame = 0;
+    let start = 0;
+    let frames = 0;
+
+    const sample = (now: number) => {
+      if (!start) start = now;
+      frames += 1;
+      const elapsed = now - start;
+      if (elapsed >= 1500) {
+        const fps = (frames * 1000) / elapsed;
+        if (fps < 42) setQuality((current) => stepDown(current));
+        return;
+      }
+      frame = window.requestAnimationFrame(sample);
+    };
+
+    const timer = window.setTimeout(() => {
+      frame = window.requestAnimationFrame(sample);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.cancelAnimationFrame(frame);
     };
   }, []);
 
