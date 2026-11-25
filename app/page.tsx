@@ -92,6 +92,19 @@ export default function HomePage() {
             }
           />
 
+          <Reveal className="mt-8 block">
+            <div className="overflow-hidden rounded-[24px] border border-ink/10 bg-warm shadow-card sm:rounded-[28px]">
+              <Image
+                src={assets.images.sevenLabsCampus}
+                alt="The seven Nano Spark interactive labs connected on the 3D campus"
+                width={1536}
+                height={1024}
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
+                className="block h-auto w-full object-contain"
+              />
+            </div>
+          </Reveal>
+
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {labs.map((lab, index) => (
               <Reveal key={lab.id} delay={(index % 3) * 0.06}>

@@ -1,12 +1,16 @@
 export const navigation = [
   { label: "Home", href: "/" },
+  { label: "Playground", href: "/playground" },
   { label: "Explore Labs", href: "/explore" },
   { label: "Tools & Platforms", href: "/tools" },
-  { label: "Playground", href: "/playground" },
+  { label: "Showroom", href: "/showroom" },
   { label: "Learn", href: "/learn" },
   { label: "Projects", href: "/projects" },
   { label: "Community", href: "/community" },
+  { label: "Quiz Generator", href: "/quiz" },
   { label: "About", href: "/about" },
+  { label: "Feedback", href: "/feedback" },
+  { label: "Contact", href: "/contact" },
 ] as const;
 
 export const site = {

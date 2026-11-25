@@ -16,6 +16,7 @@ export const assets = {
     droneLab: "/images/drone-lab.jpeg",
     students: "/images/students.jpeg",
     labsCampus: "/images/labs-campus.png",
+    sevenLabsCampus: "/images/seven-labs-campus.png",
   },
 } as const;
 

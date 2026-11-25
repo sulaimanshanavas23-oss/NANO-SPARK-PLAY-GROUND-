@@ -8,15 +8,21 @@ import {
   type ElementRef,
 } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
 import {
+  ArrowRight,
+  ArrowUpRight,
   Boxes,
   Info,
   Loader2,
   Move3D,
+  Play,
+  Rotate3D,
   RotateCcw,
+  Star,
   X,
   ZoomIn,
 } from "lucide-react";
@@ -25,6 +31,7 @@ import { ComponentHotspot } from "@/components/laboratories/component-hotspot";
 import { LabGlyph } from "@/components/shared/icons";
 import { getLabModelConfig } from "@/src/lib/lab-model-config";
 import { useDeviceQuality } from "@/src/lib/use-device-quality";
+import { useApp } from "@/src/lib/store/app-provider";
 import type { Lab } from "@/src/lib/labs";
 import { cn } from "@/src/lib/utils";
 
@@ -97,14 +104,18 @@ export function LabModelViewer({
   const quality = useDeviceQuality();
   const controls = useRef<ElementRef<typeof OrbitControls>>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { isFavorite, toggleFavorite } = useApp();
+  const favorite = isFavorite("lab", lab.id);
   const [mounted, setMounted] = useState(false);
   const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
     setActiveHotspot(null);
+    setAutoRotate(true);
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
@@ -143,7 +154,7 @@ export function LabModelViewer({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex h-[min(90vh,800px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/30 bg-white shadow-2xl"
+            className="relative flex h-[min(94vh,920px)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-white/30 bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
@@ -168,6 +179,21 @@ export function LabModelViewer({
                 <span className="hidden items-center gap-1.5 rounded-full border border-ink/10 bg-warm px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-muted sm:inline-flex">
                   <Boxes className="h-3 w-3" /> {config.hotspots.length} components
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setAutoRotate((value) => !value)}
+                  className={cn(
+                    "hidden h-9 items-center gap-1.5 rounded-full border px-3 text-[10px] font-semibold transition-colors sm:inline-flex",
+                    autoRotate
+                      ? "border-spark-dark/40 bg-spark-yellow/15 text-ink"
+                      : "border-ink/10 text-ink-muted hover:bg-warm hover:text-ink",
+                  )}
+                  aria-pressed={autoRotate}
+                  aria-label="Toggle auto-rotate"
+                >
+                  <Rotate3D className={cn("h-4 w-4", autoRotate && "text-spark-dark")} />
+                  Auto-rotate
+                </button>
                 <button
                   ref={closeRef}
                   onClick={onClose}
@@ -221,6 +247,8 @@ export function LabModelViewer({
                   dampingFactor={0.08}
                   enablePan
                   enableZoom
+                  autoRotate={autoRotate}
+                  autoRotateSpeed={1.4}
                   minDistance={2.2}
                   maxDistance={9}
                   minPolarAngle={0.35}
@@ -244,12 +272,27 @@ export function LabModelViewer({
                 ))}
               </div>
 
-              <button
-                onClick={() => controls.current?.reset()}
-                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white/85 px-3 py-1.5 text-[10px] font-semibold text-ink shadow-sm backdrop-blur transition-colors hover:bg-white"
-              >
-                <RotateCcw className="h-3.5 w-3.5" /> Reset view
-              </button>
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setAutoRotate((value) => !value)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold shadow-sm backdrop-blur transition-colors sm:hidden",
+                    autoRotate
+                      ? "border-spark-dark/40 bg-spark-yellow/90 text-ink"
+                      : "border-ink/10 bg-white/85 text-ink-muted",
+                  )}
+                  aria-pressed={autoRotate}
+                >
+                  <Rotate3D className="h-3.5 w-3.5" /> Auto
+                </button>
+                <button
+                  onClick={() => controls.current?.reset()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white/85 px-3 py-1.5 text-[10px] font-semibold text-ink shadow-sm backdrop-blur transition-colors hover:bg-white"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Reset view
+                </button>
+              </div>
 
               <AnimatePresence mode="wait">
                 {hotspot ? (
@@ -294,6 +337,61 @@ export function LabModelViewer({
                 )}
               >
                 {lab.tagline}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-ink/10 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="min-w-0">
+                <p className="line-clamp-2 text-[11.5px] leading-relaxed text-ink-muted sm:max-w-xl">
+                  {lab.description}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {lab.skills.slice(0, 3).map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-warm px-2.5 py-1 text-[9.5px] text-ink-muted"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite("lab", lab.id)}
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-full border transition-colors",
+                    favorite
+                      ? "border-spark-dark/40 bg-spark-yellow/15 text-spark-dark"
+                      : "border-ink/10 text-ink-muted hover:bg-warm hover:text-ink",
+                  )}
+                  aria-label={
+                    favorite ? "Remove lab from favorites" : "Add lab to favorites"
+                  }
+                >
+                  <Star className={cn("h-4 w-4", favorite && "fill-current")} />
+                </button>
+                {lab.embeddable ? (
+                  <Link
+                    href={`/playground?lab=${lab.id}`}
+                    onClick={onClose}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-spark-yellow px-4 text-[12px] font-bold text-ink transition-transform hover:-translate-y-0.5"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-current" /> Enter lab
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <a
+                    href={lab.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-spark-yellow px-4 text-[12px] font-bold text-ink transition-transform hover:-translate-y-0.5"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-current" /> Open lab
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </div>
             </div>
           </motion.div>

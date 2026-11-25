@@ -53,8 +53,8 @@ export function Logo({
           width={622}
           height={137}
           priority
-          sizes="(max-width: 640px) 150px, 220px"
-          className="h-9 w-auto sm:h-11 lg:h-12"
+          sizes="(max-width: 640px) 240px, 360px"
+          className="h-12 w-auto sm:h-16 lg:h-[72px]"
         />
       </span>
     </Link>

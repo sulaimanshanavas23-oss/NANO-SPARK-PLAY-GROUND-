@@ -4,28 +4,23 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  ArrowUpRight,
   Boxes,
   Expand,
   Minus,
   MousePointerClick,
   PackageOpen,
-  Play,
   Plus,
   RotateCcw,
   Rotate3D,
   Sparkles,
-  Star,
-  X,
 } from "lucide-react";
 import { labs } from "@/src/lib/labs";
 import { assets } from "@/src/lib/assets";
-import { LabGlyph } from "@/components/shared/icons";
+import { LabModelViewer } from "@/components/laboratories/lab-model-viewer";
 import { useWebGLAvailable } from "@/components/shared/webgl";
-import { useApp } from "@/src/lib/store/app-provider";
 import { cn } from "@/src/lib/utils";
 
 const CampusCanvas = dynamic(() => import("@/components/campus/campus-canvas"), {
@@ -105,19 +100,25 @@ export function CampusExplorer({
   const reduceMotion = useReducedMotion() ?? false;
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [exploded, setExploded] = useState(defaultExploded);
   const [autoRotate, setAutoRotate] = useState(false);
   const [zoom, setZoom] = useState(0);
   const [resetSignal, setResetSignal] = useState(0);
-  const { isFavorite, toggleFavorite } = useApp();
 
   const selectedLab = useMemo(
     () => labs.find((lab) => lab.id === selectedId) ?? null,
     [selectedId],
   );
 
+  function handleSelect(id: string | null) {
+    setSelectedId(id);
+    setViewerOpen(Boolean(id));
+  }
+
   function reset() {
     setSelectedId(null);
+    setViewerOpen(false);
     setExploded(false);
     setAutoRotate(false);
     setZoom(0);
@@ -149,7 +150,7 @@ export function CampusExplorer({
         {webgl === true && (
           <CampusCanvas
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={handleSelect}
             exploded={exploded}
             autoRotate={autoRotate}
             zoom={zoom}
@@ -183,100 +184,7 @@ export function CampusExplorer({
               </button>
             </div>
 
-            <AnimatePresence>
-              {selectedLab && (
-                <motion.aside
-                  key={selectedLab.id}
-                  initial={{ opacity: 0, x: 22, y: 10 }}
-                  animate={{ opacity: 1, x: 0, y: 0 }}
-                  exit={{ opacity: 0, x: 22, y: 10 }}
-                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute inset-x-3 bottom-3 z-30 max-h-[46%] overflow-y-auto rounded-2xl border border-white/10 bg-ink/95 p-4 text-white shadow-2xl backdrop-blur sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-16 sm:max-h-[calc(100%-150px)] sm:w-[292px] sm:p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-spark-yellow text-ink">
-                        <LabGlyph icon={selectedLab.icon} className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-[9.5px] font-bold uppercase tracking-[0.24em] text-spark-light/90">
-                          Lab {selectedLab.number}
-                        </p>
-                        <p className="truncate font-display text-xl font-bold leading-tight">
-                          {selectedLab.name}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedId(null)}
-                      className="rounded-full p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-                      aria-label="Close lab panel"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
 
-                  <p className="mt-3.5 text-[12.5px] leading-relaxed text-white/60">
-                    {selectedLab.description}
-                  </p>
-
-                  {!selectedLab.embeddable && (
-                    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-spark-yellow/25 bg-spark-yellow/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-spark-light">
-                      <ArrowUpRight className="h-3 w-3" /> Opens in a new tab
-                    </p>
-                  )}
-
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {selectedLab.skills.slice(0, 3).map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] text-white/70"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex items-center gap-2">
-                    {selectedLab.embeddable ? (
-                      <Link
-                        href={`/playground?lab=${selectedLab.id}`}
-                        className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-spark-yellow px-4 text-[13px] font-bold text-ink transition-transform hover:-translate-y-0.5"
-                      >
-                        <Play className="h-4 w-4 fill-current" /> Enter lab
-                      </Link>
-                    ) : (
-                      <a
-                        href={selectedLab.url}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-spark-yellow px-4 text-[13px] font-bold text-ink transition-transform hover:-translate-y-0.5"
-                      >
-                        <Play className="h-4 w-4 fill-current" /> Open lab
-                        <ArrowUpRight className="h-4 w-4" />
-                      </a>
-                    )}
-                    <button
-                      onClick={() => toggleFavorite("lab", selectedLab.id)}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10"
-                      aria-label={
-                        isFavorite("lab", selectedLab.id)
-                          ? "Remove lab from favorites"
-                          : "Add lab to favorites"
-                      }
-                    >
-                      <Star
-                        className={cn(
-                          "h-4 w-4",
-                          isFavorite("lab", selectedLab.id) &&
-                            "fill-spark-yellow text-spark-yellow",
-                        )}
-                      />
-                    </button>
-                  </div>
-                </motion.aside>
-              )}
-            </AnimatePresence>
 
             <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-ink/90 p-1.5 text-white shadow-2xl backdrop-blur-md">
               <button
@@ -348,6 +256,17 @@ export function CampusExplorer({
           </>
         )}
       </div>
+
+      {selectedLab && (
+        <LabModelViewer
+          lab={selectedLab}
+          open={viewerOpen}
+          onClose={() => {
+            setViewerOpen(false);
+            setSelectedId(null);
+          }}
+        />
+      )}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-ink-muted">
         <p className="inline-flex items-center gap-1.5">

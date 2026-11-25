@@ -10,18 +10,16 @@ import {
   ChevronDown,
   Command,
   LayoutDashboard,
-  LogIn,
   LogOut,
   Menu,
+  MoreHorizontal,
   Play,
   Search,
   Sparkles,
-  User,
   X,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { SearchDialog } from "@/components/navigation/search-dialog";
-import { buttonClass } from "@/components/shared/button";
 import { LabGlyph } from "@/components/shared/icons";
 import { labs } from "@/src/lib/labs";
 import { navigation } from "@/src/lib/site";
@@ -42,6 +40,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [hasUnread, setHasUnread] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -61,6 +60,7 @@ export function Navbar() {
       }
       if (event.key === "Escape") {
         setPanel(null);
+        setMoreOpen(false);
         setMobileOpen(false);
       }
     };
@@ -70,6 +70,7 @@ export function Navbar() {
 
   useEffect(() => {
     setMobileOpen(false);
+    setMoreOpen(false);
     setPanel(null);
   }, [pathname]);
 
@@ -84,6 +85,9 @@ export function Navbar() {
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  const primaryNav = navigation.slice(0, 6);
+  const moreNav = navigation.slice(6);
 
   const initials = useMemo(() => {
     if (!profile) return "NS";
@@ -136,7 +140,7 @@ export function Navbar() {
           scrolled && "shadow-nav",
         )}
       >
-        <div className="container-wide flex h-[70px] items-center justify-between gap-4 xl:h-[78px]">
+        <div className="container-wide flex h-[84px] items-center justify-between gap-4 xl:h-[96px]">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="shrink-0" />
           </div>
@@ -145,7 +149,7 @@ export function Navbar() {
             aria-label="Primary"
             className="hidden items-center gap-4 xl:flex 2xl:gap-6"
           >
-            {navigation.map((item) => (
+            {primaryNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -160,6 +164,52 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoreOpen((value) => !value)}
+                className={cn(
+                  "flex items-center gap-1 whitespace-nowrap py-2 text-[12.5px] font-medium transition-colors 2xl:text-[13px]",
+                  moreOpen || moreNav.some((item) => isActive(item.href))
+                    ? "text-ink"
+                    : "text-ink-muted hover:text-ink",
+                )}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+              >
+                More <MoreHorizontal className="h-4 w-4" />
+              </button>
+              <AnimatePresence>
+                {moreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.16 }}
+                    role="menu"
+                    className="absolute right-0 top-11 w-56 overflow-hidden rounded-2xl border border-ink/10 bg-white p-1.5 shadow-card"
+                  >
+                    {moreNav.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        role="menuitem"
+                        onClick={() => setMoreOpen(false)}
+                        className={cn(
+                          "flex items-center justify-between rounded-xl px-3 py-2.5 text-[12.5px] font-medium transition-colors",
+                          isActive(item.href)
+                            ? "bg-spark-yellow/15 text-ink"
+                            : "text-ink-muted hover:bg-warm hover:text-ink",
+                        )}
+                      >
+                        {item.label}
+                        <ArrowRight className="h-3.5 w-3.5 opacity-40" />
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -309,15 +359,7 @@ export function Navbar() {
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
-              <Link
-                href="/auth"
-                className="hidden items-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-xs font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-black sm:inline-flex"
-              >
-                <LogIn className="h-3.5 w-3.5" />
-                Sign In
-              </Link>
-            )}
+            ) : null}
 
             <button
               onClick={() => setMobileOpen(true)}
@@ -422,59 +464,6 @@ export function Navbar() {
                   ))}
                 </div>
 
-                <div className="mt-7 rounded-2xl bg-ink p-4 text-white">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-spark-yellow text-ink">
-                      {profile ? (
-                        <User className="h-4 w-4" />
-                      ) : (
-                        <LogIn className="h-4 w-4" />
-                      )}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold">
-                        {profile ? profile.name : "Student access"}
-                      </p>
-                      <p className="truncate text-[10px] text-white/50">
-                        {profile ? profile.email : "Sign in to save your progress"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Link
-                      href={profile ? "/dashboard" : "/auth"}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        buttonClass("primary", "sm"),
-                        "flex-1 text-[11px]",
-                      )}
-                    >
-                      {profile ? "Dashboard" : "Sign In"}
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        setSearchOpen(true);
-                      }}
-                      className={cn(
-                        buttonClass("outline", "sm"),
-                        "flex-1 border-white/20 bg-transparent text-[11px] text-white hover:bg-white/10 hover:text-white",
-                      )}
-                    >
-                      <Search className="h-3.5 w-3.5" /> Search
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={async () => {
-                    if (profile) await signOut();
-                    setMobileOpen(false);
-                  }}
-                  className="mt-4 w-full rounded-xl py-3 text-xs font-medium text-ink-muted transition-colors hover:bg-warm hover:text-ink"
-                >
-                  {profile ? "Sign out" : "Continue as guest"}
-                </button>
               </div>
             </motion.aside>
           </>
