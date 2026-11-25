@@ -7,6 +7,7 @@ import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowUpRight,
   Boxes,
   Expand,
   Minus,
@@ -220,6 +221,12 @@ export function CampusExplorer({
                     {selectedLab.description}
                   </p>
 
+                  {!selectedLab.embeddable && (
+                    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-spark-yellow/25 bg-spark-yellow/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-spark-light">
+                      <ArrowUpRight className="h-3 w-3" /> Opens in a new tab
+                    </p>
+                  )}
+
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {selectedLab.skills.slice(0, 3).map((skill) => (
                       <span
@@ -232,12 +239,24 @@ export function CampusExplorer({
                   </div>
 
                   <div className="mt-4 flex gap-2">
-                    <Link
-                      href={`/playground?lab=${selectedLab.id}`}
-                      className={cn(buttonClass("primary", "sm"), "flex-1 text-[11px]")}
-                    >
-                      <Play className="h-3 w-3 fill-current" /> Enter lab
-                    </Link>
+                    {selectedLab.embeddable ? (
+                      <Link
+                        href={`/playground?lab=${selectedLab.id}`}
+                        className={cn(buttonClass("primary", "sm"), "flex-1 text-[11px]")}
+                      >
+                        <Play className="h-3 w-3 fill-current" /> Enter lab
+                      </Link>
+                    ) : (
+                      <a
+                        href={selectedLab.url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className={cn(buttonClass("primary", "sm"), "flex-1 text-[11px]")}
+                      >
+                        <Play className="h-3 w-3 fill-current" /> Open lab
+                        <ArrowUpRight className="h-3 w-3" />
+                      </a>
+                    )}
                     <button
                       onClick={() => toggleFavorite("lab", selectedLab.id)}
                       className={cn(

@@ -24,6 +24,7 @@ import { labs, getLab, type Lab } from "@/src/lib/labs";
 import { assets } from "@/src/lib/assets";
 import { buttonClass } from "@/components/shared/button";
 import { LabGlyph } from "@/components/shared/icons";
+import { Lab3DPreview } from "@/components/laboratories/lab-3d-preview";
 import { useApp } from "@/src/lib/store/app-provider";
 import { cn } from "@/src/lib/utils";
 
@@ -48,14 +49,17 @@ function LaunchCard({
         className="object-cover opacity-[0.14]"
       />
       <div className="absolute inset-0 bg-gradient-to-br from-[#f7f7f4] via-[#f7f7f4]/80 to-[#f3e6bd]/50" />
-      <div className="relative w-full max-w-md rounded-3xl border border-ink/10 bg-white/90 p-6 text-center shadow-card backdrop-blur sm:p-8">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ink text-spark-yellow">
-          <LabGlyph icon={lab.icon} className="h-7 w-7" />
-        </span>
-        <p className="mt-5 text-[9px] font-semibold uppercase tracking-[0.22em] text-spark-dark">
-          Lab {lab.number}
-        </p>
-        <h3 className="mt-1 font-display text-2xl font-semibold">{lab.name}</h3>
+      <div className="relative w-full max-w-md rounded-3xl border border-ink/10 bg-white/90 p-5 text-center shadow-card backdrop-blur sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink text-spark-yellow">
+            <LabGlyph icon={lab.icon} className="h-4 w-4" />
+          </span>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-spark-dark">
+            Lab {lab.number}
+          </p>
+        </div>
+        <Lab3DPreview lab={lab} className="mx-auto mt-3 h-32 w-full" showHint={false} />
+        <h3 className="mt-4 font-display text-2xl font-semibold">{lab.name}</h3>
         <p className="mt-2 text-[12.5px] leading-relaxed text-ink-muted">
           {reason === "blocked"
             ? "This lab has loaded its own security policy that prevents it from being embedded. Open it in a new tab to use the full application — your campus selection is kept here."
@@ -384,7 +388,7 @@ export function PlaygroundWorkspace() {
                   >
                     <LaunchCard
                       lab={selected}
-                      reason="blocked"
+                      reason={selected.embeddable ? "blocked" : "external"}
                       onRetry={selected.embeddable ? reload : undefined}
                     />
                   </motion.div>

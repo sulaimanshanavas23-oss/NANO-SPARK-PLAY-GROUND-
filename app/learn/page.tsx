@@ -235,12 +235,11 @@ export default function LearnPage() {
             description="Not a list of features — a map of what a student can actually do after spending time in each application."
           />
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {labs.map((lab, index) => (
-              <Reveal key={lab.id} delay={index * 0.05}>
-                <Link
-                  href={`/playground?lab=${lab.id}`}
-                  className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-spark-yellow/40 hover:bg-white/[0.06]"
-                >
+            {labs.map((lab, index) => {
+              const cardClass =
+                "group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-spark-yellow/40 hover:bg-white/[0.06]";
+              const inner = (
+                <>
                   <div className="flex items-center justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-spark-yellow text-ink">
                       <LabGlyph icon={lab.icon} className="h-4 w-4" />
@@ -264,12 +263,30 @@ export default function LearnPage() {
                     ))}
                   </ul>
                   <span className="mt-auto flex items-center gap-1 pt-4 text-[10px] font-semibold text-spark-light">
-                    Open lab
+                    {lab.embeddable ? "Open lab" : "Open in new tab"}
                     <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                   </span>
-                </Link>
-              </Reveal>
-            ))}
+                </>
+              );
+              return (
+                <Reveal key={lab.id} delay={index * 0.05}>
+                  {lab.embeddable ? (
+                    <Link href={`/playground?lab=${lab.id}`} className={cardClass}>
+                      {inner}
+                    </Link>
+                  ) : (
+                    <a
+                      href={lab.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className={cardClass}
+                    >
+                      {inner}
+                    </a>
+                  )}
+                </Reveal>
+              );
+            })}
             <Reveal delay={labs.length * 0.05}>
               <div className="flex h-full flex-col justify-between rounded-2xl border border-spark-yellow/25 bg-spark-yellow/[0.07] p-4">
                 <div>

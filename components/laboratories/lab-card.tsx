@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, Play, Star } from "lucide-react";
 import type { Lab } from "@/src/lib/labs";
 import { LabGlyph } from "@/components/shared/icons";
+import { Lab3DPreview } from "@/components/laboratories/lab-3d-preview";
 import { useApp } from "@/src/lib/store/app-provider";
 import { cn } from "@/src/lib/utils";
 
@@ -16,19 +17,22 @@ export function LabCard({
 }) {
   const { isFavorite, toggleFavorite } = useApp();
   const favorite = isFavorite("lab", lab.id);
+  const external = !lab.embeddable;
+  const detailHref = `/playground?lab=${lab.id}`;
 
   return (
     <div
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-3xl border border-ink/[0.08] bg-white p-5 transition-all duration-500 hover:-translate-y-1.5 hover:border-spark-dark/40 hover:shadow-card sm:p-6",
+        "group relative flex h-full flex-col overflow-hidden rounded-3xl border border-ink/[0.08] bg-white p-4 transition-all duration-500 hover:-translate-y-1.5 hover:border-spark-dark/40 hover:shadow-card sm:p-5",
         className,
       )}
     >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-spark-yellow/0 blur-2xl transition-colors duration-500 group-hover:bg-spark-yellow/25" />
-      <div className="flex items-start justify-between">
+      <Lab3DPreview lab={lab} className="h-40 w-full sm:h-44" />
+
+      <div className="mt-4 flex items-start justify-between">
         <Link
-          href={`/playground?lab=${lab.id}`}
-          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-spark-yellow transition-transform duration-500 group-hover:scale-105"
+          href={detailHref}
+          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-spark-yellow transition-transform duration-500 group-hover:scale-105"
           aria-label={`Open ${lab.name}`}
         >
           <LabGlyph icon={lab.icon} className="h-5 w-5" />
@@ -54,7 +58,7 @@ export function LabCard({
         </div>
       </div>
 
-      <Link href={`/playground?lab=${lab.id}`} className="mt-5 block">
+      <Link href={detailHref} className="mt-4 block">
         <h3 className="font-display text-xl font-semibold tracking-tight">
           {lab.name}
         </h3>
@@ -79,17 +83,35 @@ export function LabCard({
 
       <div className="mt-5 flex items-center justify-between border-t border-ink/[0.06] pt-4">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-ink-muted/60">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Lab online
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              external ? "bg-spark-dark" : "bg-emerald-500",
+            )}
+          />
+          {external ? "Opens in a new tab" : "Lab online"}
         </span>
-        <Link
-          href={`/playground?lab=${lab.id}`}
-          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink transition-colors group-hover:text-spark-dark"
-        >
-          <Play className="h-3 w-3 fill-current" />
-          Enter lab
-          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-        </Link>
+        {external ? (
+          <a
+            href={lab.url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink transition-colors group-hover:text-spark-dark"
+          >
+            <Play className="h-3 w-3 fill-current" />
+            Open lab
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </a>
+        ) : (
+          <Link
+            href={detailHref}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink transition-colors group-hover:text-spark-dark"
+          >
+            <Play className="h-3 w-3 fill-current" />
+            Enter lab
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </Link>
+        )}
       </div>
     </div>
   );
