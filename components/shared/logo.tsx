@@ -14,42 +14,49 @@ export function Logo({
   tone?: "light" | "dark";
   className?: string;
 }) {
+  if (compact) {
+    return (
+      <Link
+        href={href}
+        aria-label="Nano Spark home"
+        className={cn("group flex items-center", className)}
+      >
+        <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-ink/10 sm:h-11 sm:w-11">
+          <Image
+            src={assets.branding.mark}
+            alt="Nano Spark logo"
+            fill
+            sizes="44px"
+            className="object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
+          />
+        </span>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={href}
       aria-label="Nano Spark home"
-      className={cn("group flex items-center gap-2.5", className)}
+      className={cn("group flex items-center", className)}
     >
-      <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-ink/10 sm:h-11 sm:w-11">
+      <span
+        className={cn(
+          "relative block transition-transform duration-500 group-hover:scale-[1.02]",
+          tone === "dark" &&
+            "rounded-xl bg-white px-2 py-1.5 ring-1 ring-white/20",
+        )}
+      >
         <Image
-          src={assets.branding.mark}
-          alt="Nano Spark logo"
-          fill
-          sizes="44px"
-          className="object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
+          src={assets.branding.wordmarkWide}
+          alt="Nano Spark — Technology, Innovations, Solutions"
+          width={622}
+          height={137}
+          priority
+          sizes="(max-width: 640px) 150px, 220px"
+          className="h-9 w-auto sm:h-11 lg:h-12"
         />
       </span>
-      {!compact && (
-        <span className="flex flex-col leading-none">
-          <span
-            className={cn(
-              "font-display text-[15px] font-extrabold tracking-tight sm:text-base",
-              tone === "dark" ? "text-white" : "text-ink",
-            )}
-          >
-            Nano <span className="text-spark-dark">Spark</span>
-            <span className="text-spark-yellow">.</span>
-          </span>
-          <span
-            className={cn(
-              "mt-1 hidden text-[7px] font-semibold uppercase tracking-[0.17em] sm:block",
-              tone === "dark" ? "text-white/45" : "text-ink-muted/80",
-            )}
-          >
-            Technology · Innovations · Solutions
-          </span>
-        </span>
-      )}
     </Link>
   );
 }

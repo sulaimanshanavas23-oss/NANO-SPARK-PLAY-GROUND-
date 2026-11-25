@@ -104,10 +104,9 @@ export default function PlaygroundPage() {
                   Workspace tips
                 </h2>
                 <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-ink-muted">
-                  Every lab is a live external application. If a host restricts
-                  embedding, the workspace gives you a one-click launch card
-                  instead of a broken frame. Keep this tab open and labs open
-                  alongside it.
+                  Every lab is a live interactive application. Keep this tab
+                  open and launch labs alongside it whenever you want the full
+                  experience.
                 </p>
               </div>
               <Link href="/dashboard" className={buttonClass("outline", "sm")}>
@@ -121,8 +120,8 @@ export default function PlaygroundPage() {
                   body: "The lab switcher keeps every application one click away and preserves the selected lab in the URL.",
                 },
                 {
-                  title: "Embedded where permitted",
-                  body: "Six of seven hosts allow secure framing. Protocol Explorer requires a new tab by design.",
+                  title: "Launch in one tap",
+                  body: "Open any lab in its own full-screen tab and jump back to the workspace whenever you like.",
                 },
                 {
                   title: "Visits become progress",

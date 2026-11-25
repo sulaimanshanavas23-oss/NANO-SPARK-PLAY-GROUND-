@@ -209,8 +209,7 @@ export default function ExplorePage() {
               ))}
             </div>
             <p className="mt-4 text-[11px] text-ink-muted">
-              Some hosts restrict embedding for security. The Playground gives
-              you a polished external launch for every blocked lab.
+              Every lab launches live from a single polished workspace.
             </p>
             <Link
               href="/playground"

@@ -139,26 +139,6 @@ export function Navbar() {
         <div className="container-wide flex h-[70px] items-center justify-between gap-4 xl:h-[78px]">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="shrink-0" />
-            <span className="hidden h-8 w-px shrink-0 bg-ink/10 sm:block" />
-            <Link
-              href="/"
-              className="group hidden items-center gap-2 sm:flex"
-              aria-label="Nano Playground home"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-spark-yellow text-ink transition-transform duration-300 group-hover:scale-105">
-                <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
-              </span>
-              <span className="font-display text-[17px] font-bold tracking-tight text-ink">
-                Nano Playground
-              </span>
-            </Link>
-            <Link
-              href="/"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-spark-yellow text-ink sm:hidden"
-              aria-label="Nano Playground home"
-            >
-              <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
-            </Link>
           </div>
 
           <nav

@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { labs } from "@/src/lib/labs";
 import { assets } from "@/src/lib/assets";
-import { buttonClass } from "@/components/shared/button";
 import { LabGlyph } from "@/components/shared/icons";
 import { useWebGLAvailable } from "@/components/shared/webgl";
 import { useApp } from "@/src/lib/store/app-provider";
@@ -195,15 +194,15 @@ export function CampusExplorer({
                   className="absolute inset-x-3 bottom-3 z-30 max-h-[46%] overflow-y-auto rounded-2xl border border-white/10 bg-ink/95 p-4 text-white shadow-2xl backdrop-blur sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-16 sm:max-h-[calc(100%-150px)] sm:w-[292px] sm:p-5"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-spark-yellow text-ink">
-                        <LabGlyph icon={selectedLab.icon} className="h-4 w-4" />
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-spark-yellow text-ink">
+                        <LabGlyph icon={selectedLab.icon} className="h-5 w-5" />
                       </span>
-                      <div>
-                        <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-spark-light/80">
+                      <div className="min-w-0">
+                        <p className="text-[9.5px] font-bold uppercase tracking-[0.24em] text-spark-light/90">
                           Lab {selectedLab.number}
                         </p>
-                        <p className="font-display text-lg font-semibold leading-tight">
+                        <p className="truncate font-display text-xl font-bold leading-tight">
                           {selectedLab.name}
                         </p>
                       </div>
@@ -217,7 +216,7 @@ export function CampusExplorer({
                     </button>
                   </div>
 
-                  <p className="mt-3 text-[12px] leading-relaxed text-white/60">
+                  <p className="mt-3.5 text-[12.5px] leading-relaxed text-white/60">
                     {selectedLab.description}
                   </p>
 
@@ -227,42 +226,39 @@ export function CampusExplorer({
                     </p>
                   )}
 
-                  <div className="mt-3 flex flex-wrap gap-1.5">
+                  <div className="mt-4 flex flex-wrap gap-1.5">
                     {selectedLab.skills.slice(0, 3).map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9.5px] text-white/65"
+                        className="rounded-full border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] text-white/70"
                       >
                         {skill}
                       </span>
                     ))}
                   </div>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-5 flex items-center gap-2">
                     {selectedLab.embeddable ? (
                       <Link
                         href={`/playground?lab=${selectedLab.id}`}
-                        className={cn(buttonClass("primary", "sm"), "flex-1 text-[11px]")}
+                        className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-spark-yellow px-4 text-[13px] font-bold text-ink transition-transform hover:-translate-y-0.5"
                       >
-                        <Play className="h-3 w-3 fill-current" /> Enter lab
+                        <Play className="h-4 w-4 fill-current" /> Enter lab
                       </Link>
                     ) : (
                       <a
                         href={selectedLab.url}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className={cn(buttonClass("primary", "sm"), "flex-1 text-[11px]")}
+                        className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-spark-yellow px-4 text-[13px] font-bold text-ink transition-transform hover:-translate-y-0.5"
                       >
-                        <Play className="h-3 w-3 fill-current" /> Open lab
-                        <ArrowUpRight className="h-3 w-3" />
+                        <Play className="h-4 w-4 fill-current" /> Open lab
+                        <ArrowUpRight className="h-4 w-4" />
                       </a>
                     )}
                     <button
                       onClick={() => toggleFavorite("lab", selectedLab.id)}
-                      className={cn(
-                        buttonClass("outline", "sm"),
-                        "border-white/20 bg-transparent px-3 text-white hover:bg-white/10 hover:text-white",
-                      )}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10"
                       aria-label={
                         isFavorite("lab", selectedLab.id)
                           ? "Remove lab from favorites"
@@ -271,7 +267,7 @@ export function CampusExplorer({
                     >
                       <Star
                         className={cn(
-                          "h-3.5 w-3.5",
+                          "h-4 w-4",
                           isFavorite("lab", selectedLab.id) &&
                             "fill-spark-yellow text-spark-yellow",
                         )}

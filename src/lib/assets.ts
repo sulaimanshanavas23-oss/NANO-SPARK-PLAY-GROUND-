@@ -5,6 +5,7 @@ export const assets = {
     mark: "/branding/nano-spark-mark.png",
     markAlt: "/branding/nano-spark-mark-alt.jpeg",
     favicon: "/branding/nano-spark-favicon.png",
+    wordmarkWide: "/branding/nano-spark-logo-wide.png",
   },
   images: {
     brandSystem: "/images/brand-system.jpeg",

@@ -11,12 +11,10 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ExternalLink,
-  Info,
   Loader2,
   Maximize2,
   Play,
   RefreshCw,
-  ShieldAlert,
   Sparkles,
   Wifi,
 } from "lucide-react";
@@ -61,9 +59,8 @@ function LaunchCard({
         <Lab3DPreview lab={lab} className="mx-auto mt-3 h-32 w-full" showHint={false} />
         <h3 className="mt-4 font-display text-2xl font-semibold">{lab.name}</h3>
         <p className="mt-2 text-[12.5px] leading-relaxed text-ink-muted">
-          {reason === "blocked"
-            ? "This lab has loaded its own security policy that prevents it from being embedded. Open it in a new tab to use the full application — your campus selection is kept here."
-            : "This application is designed to run in its own full-screen environment. Launch it below — the workspace will keep your place in the campus."}
+          This application runs best in its own full-screen environment. Launch
+          it below — the workspace will keep your place in the campus.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-1.5">
           {lab.skills.slice(0, 3).map((skill) => (
@@ -92,10 +89,8 @@ function LaunchCard({
           )}
         </div>
         <p className="mt-4 flex items-center justify-center gap-1.5 text-[10px] text-ink-muted/60">
-          <ShieldAlert className="h-3 w-3" />
-          {reason === "blocked"
-            ? "Host blocks iframe embedding (X-Frame-Options / CSP)"
-            : "Runs best in a dedicated browser tab"}
+          <ExternalLink className="h-3 w-3" />
+          Runs best in a dedicated browser tab
         </p>
       </div>
     </div>
@@ -369,13 +364,8 @@ export function PlaygroundWorkspace() {
                       Connecting to {selected.name}…
                     </p>
                     <p className="max-w-xs text-center text-[10.5px] leading-relaxed text-ink-muted">
-                      If this host blocks embedding, a launch card will appear
-                      automatically.
+                      Preparing your interactive environment.
                     </p>
-                    <span className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-ink/10 bg-white/80 px-3 py-1.5 text-[9px] text-ink-muted">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-spark-dark" />
-                      Cross-origin secure frame
-                    </span>
                   </motion.div>
                 )}
 
@@ -394,26 +384,6 @@ export function PlaygroundWorkspace() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-ink/[0.06] bg-warm/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-2.5">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-spark-dark" />
-                <p className="max-w-xl text-[10.5px] leading-relaxed text-ink-muted">
-                  Some lab hosts apply security headers that block framing. In
-                  that case use <strong className="text-ink">Open in new tab</strong>{" "}
-                  — every one of the seven applications is verified and live.
-                </p>
-              </div>
-              <a
-                href={selected.url}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex shrink-0 items-center gap-1 text-[10.5px] font-semibold text-ink hover:text-spark-dark"
-              >
-                {new URL(selected.url).hostname}
-                <ArrowUpRight className="h-3 w-3" />
-              </a>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
