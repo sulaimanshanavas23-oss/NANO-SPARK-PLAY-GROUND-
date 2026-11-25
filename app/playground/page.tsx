@@ -60,30 +60,22 @@ export default function PlaygroundPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 sm:grid-cols-4">
-            {[
-              { name: "Arduino", id: "arduino-lab" },
-              { name: "ESP32", id: "esp32-lab" },
-              { name: "Protocols", id: "protocol-explorer" },
-              { name: "Electronics", id: "electronics-101" },
-            ].map((item) => {
-              const lab = labs.find((entry) => entry.id === item.id);
-              return (
-                <Link
-                  key={item.id}
-                  href={`/playground?lab=${item.id}`}
-                  className="group flex items-center justify-between border-l border-white/10 pl-3 text-[11px] text-white/50 transition-colors hover:text-white"
-                >
-                  <span>
-                    <span className="block text-[9px] uppercase tracking-[0.14em] text-white/25">
-                      {lab?.number}
-                    </span>
-                    {item.name}
+          <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-7">
+            {labs.map((lab) => (
+              <Link
+                key={lab.id}
+                href={`/playground?lab=${lab.id}`}
+                className="group flex items-center justify-between border-l border-white/10 pl-3 text-[11px] text-white/50 transition-colors hover:text-white"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[9px] uppercase tracking-[0.14em] text-white/25">
+                    {lab.number}
                   </span>
-                  <ArrowRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
-              );
-            })}
+                  <span className="block truncate">{lab.name}</span>
+                </span>
+                <ArrowRight className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+              </Link>
+            ))}
           </div>
         </div>
       </section>

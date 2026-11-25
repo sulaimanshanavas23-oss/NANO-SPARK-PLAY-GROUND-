@@ -179,7 +179,7 @@ export function PlaygroundWorkspace() {
                 7 online
               </span>
             </div>
-            <nav className="flex gap-2 overflow-x-auto pb-1 no-scrollbar lg:grid lg:gap-1 lg:overflow-visible lg:pb-0">
+            <nav className="grid grid-cols-1 gap-1">
               {labs.map((lab) => {
                 const active = lab.id === selected.id;
                 const visitedLab = Boolean(progress[lab.id]);
@@ -188,7 +188,7 @@ export function PlaygroundWorkspace() {
                     key={lab.id}
                     onClick={() => selectLab(lab.id)}
                     className={cn(
-                      "group flex min-w-[185px] items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left transition-colors lg:min-w-0",
+                      "group flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left transition-colors",
                       active
                         ? "bg-ink text-white"
                         : "text-ink-muted hover:bg-warm hover:text-ink",
@@ -340,7 +340,7 @@ export function PlaygroundWorkspace() {
 
             <div
               ref={frameRef}
-              className="relative mt-4 h-[62vh] min-h-[480px] overflow-hidden rounded-2xl border border-ink/10 bg-[#f6f6f2] lg:h-[70vh]"
+              className="relative mt-4 h-[70vh] min-h-[420px] overflow-hidden rounded-2xl border border-ink/10 bg-[#f6f6f2] sm:min-h-[480px] lg:h-[70vh]"
             >
               {selected.embeddable && frameState !== "blocked" && (
                 <iframe
@@ -466,8 +466,8 @@ export function PlaygroundWorkspace() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {labs.slice(0, 4).map((lab) => (
+      <div className="mt-8 grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {labs.map((lab) => (
           <button
             key={lab.id}
             onClick={() => selectLab(lab.id)}
