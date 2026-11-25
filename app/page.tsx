@@ -92,7 +92,7 @@ export default function HomePage() {
             }
           />
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {labs.map((lab, index) => (
               <Reveal key={lab.id} delay={(index % 3) * 0.06}>
                 <LabCard lab={lab} />

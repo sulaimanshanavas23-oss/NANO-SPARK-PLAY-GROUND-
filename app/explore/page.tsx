@@ -109,7 +109,7 @@ export default function ExplorePage() {
             }
             description="Each card opens the lab inside the Playground workspace, where you can use the embedded view or launch the application in a new tab."
           />
-          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {labs.map((lab, index) => (
               <Reveal key={lab.id} delay={(index % 3) * 0.05}>
                 <LabCard lab={lab} />

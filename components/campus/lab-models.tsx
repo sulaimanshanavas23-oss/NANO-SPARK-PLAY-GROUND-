@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -94,9 +94,10 @@ function SignalWaves() {
   );
 }
 
-function ArduinoModel() {
+function ArduinoModel({ children }: { children?: ReactNode }) {
   return (
     <group scale={0.82} rotation={[0, 0.22, 0]}>
+      {children}
       <RoundedBox args={[1.62, 0.09, 1.02]} radius={0.035} smoothness={3} position={[0, 0.12, 0]}>
         <meshStandardMaterial color="#0b7fa8" metalness={0.35} roughness={0.42} />
       </RoundedBox>
@@ -144,9 +145,10 @@ function ArduinoModel() {
   );
 }
 
-function Esp32Model() {
+function Esp32Model({ children }: { children?: ReactNode }) {
   return (
     <group scale={0.84} rotation={[0, -0.2, 0]}>
+      {children}
       <RoundedBox args={[1.38, 0.08, 0.8]} radius={0.03} smoothness={3} position={[0, 0.12, 0]}>
         <meshStandardMaterial color="#232a30" metalness={0.35} roughness={0.45} />
       </RoundedBox>
@@ -197,8 +199,42 @@ const protocolNodes: [number, number, number][] = [
   [0.05, 0.25, 0.55],
 ];
 
-function ProtocolModel() {
+const landMasses: [number, number, number][] = [
+  [0.31, 0.28, 0.3],
+  [-0.12, 0.36, 0.28],
+  [0.08, -0.16, 0.42],
+  [-0.32, -0.2, 0.33],
+  [0.36, -0.28, 0.2],
+  [-0.36, 0.14, 0.31],
+  [0.16, -0.35, 0.26],
+  [-0.2, 0.05, 0.4],
+  [0.4, 0.05, -0.28],
+  [-0.06, 0.42, -0.22],
+  [0.28, -0.1, -0.38],
+  [-0.32, -0.06, -0.35],
+];
+
+function Continents() {
+  return (
+    <group>
+      {landMasses.map((position, index) => (
+        <mesh
+          key={index}
+          position={position}
+          scale={[0.09 + (index % 3) * 0.025, 0.07 + (index % 2) * 0.03, 0.05]}
+          rotation={[index * 0.3, index * 0.7, index * 0.2]}
+        >
+          <sphereGeometry args={[1, 10, 8]} />
+          <meshStandardMaterial color="#3fa34d" roughness={0.85} metalness={0.05} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function ProtocolModel({ children }: { children?: ReactNode }) {
   const packets = useRef<THREE.Group>(null);
+  const globe = useRef<THREE.Group>(null);
   const lineMaterial = useMemo(
     () => new THREE.MeshBasicMaterial({ color: "#FFB900", transparent: true, opacity: 0.55 }),
     [],
@@ -221,7 +257,8 @@ function ProtocolModel() {
     return pairs;
   }, []);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
+    if (globe.current) globe.current.rotation.y += delta * 0.18;
     if (packets.current) {
       packets.current.children.forEach((child, index) => {
         const pair = connections[index];
@@ -234,6 +271,46 @@ function ProtocolModel() {
 
   return (
     <group scale={0.86} position={[0, 0.05, 0]}>
+      {children}
+
+      <group ref={globe} position={[0, 0.58, 0]} scale={0.9}>
+        <mesh>
+          <sphereGeometry args={[0.5, 40, 32]} />
+          <meshStandardMaterial
+            color="#1668c7"
+            emissive="#0b3f86"
+            emissiveIntensity={0.35}
+            metalness={0.28}
+            roughness={0.5}
+          />
+        </mesh>
+        <mesh scale={1.006}>
+          <sphereGeometry args={[0.5, 26, 18]} />
+          <meshBasicMaterial
+            color="#7dd3fc"
+            wireframe
+            transparent
+            opacity={0.16}
+            toneMapped={false}
+          />
+        </mesh>
+        <Continents />
+        <mesh rotation={[Math.PI / 2.1, 0.2, 0]}>
+          <torusGeometry args={[0.68, 0.006, 8, 96]} />
+          <meshBasicMaterial
+            color="#FFC107"
+            transparent
+            opacity={0.5}
+            toneMapped={false}
+          />
+        </mesh>
+        {[-0.38, 0.42].map((x, index) => (
+          <mesh key={x} position={[x, 0.22 - index * 0.32, 0.3]}>
+            <sphereGeometry args={[0.035, 12, 12]} />
+            <meshBasicMaterial color="#FFD54F" toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
       {[0, 1, 2].map((index) => (
         <group key={index} position={[-0.25 + index * 0.02, 0.12 + index * 0.17, -0.32]}>
           <RoundedBox args={[0.62, 0.17, 0.42]} radius={0.03} smoothness={3}>
@@ -329,7 +406,7 @@ function Resistor({
   );
 }
 
-function ElectronicsModel() {
+function ElectronicsModel({ children }: { children?: ReactNode }) {
   const holes = useMemo(() => {
     const list: [number, number, number][] = [];
     for (let row = 0; row < 5; row += 1) {
@@ -342,6 +419,7 @@ function ElectronicsModel() {
 
   return (
     <group scale={0.9} rotation={[0, -0.15, 0]}>
+      {children}
       <RoundedBox args={[1.56, 0.14, 0.94]} radius={0.03} smoothness={3} position={[0, 0.13, 0]}>
         <meshStandardMaterial color="#f4f2ea" roughness={0.6} />
       </RoundedBox>
@@ -461,9 +539,41 @@ function Wheel({
   );
 }
 
-function RoverModel() {
+function SensorWaves({ position }: { position: [number, number, number] }) {
+  const group = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (!group.current) return;
+    group.current.children.forEach((child, index) => {
+      const mesh = child as THREE.Mesh;
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      const t = (clock.elapsedTime * 0.55 + index / 3) % 1;
+      mesh.scale.setScalar(0.5 + t * 1.8);
+      if (material) material.opacity = (1 - t) * 0.4;
+    });
+  });
+  return (
+    <group ref={group} position={position} rotation={[0, Math.PI / 2, 0]}>
+      {[0, 1, 2].map((index) => (
+        <mesh key={index}>
+          <ringGeometry args={[0.1, 0.12, 36]} />
+          <meshBasicMaterial
+            color="#00e5ff"
+            transparent
+            opacity={0.4}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function RoverModel({ children }: { children?: ReactNode }) {
   return (
     <group scale={0.92} rotation={[0, 0.35, 0]}>
+      {children}
       <RoundedBox args={[0.98, 0.22, 0.64]} radius={0.06} smoothness={3} position={[0, 0.42, 0]}>
         <meshStandardMaterial color="#FFC107" metalness={0.4} roughness={0.34} />
       </RoundedBox>
@@ -504,6 +614,7 @@ function RoverModel() {
         <meshStandardMaterial color="#bdbdbd" metalness={0.9} roughness={0.3} />
       </mesh>
       <Led color="#39ff14" position={[0.3, 0.82, 0]} size={0.03} />
+      <SensorWaves position={[0.55, 0.44, 0]} />
       <mesh position={[0.02, 0.7, 0]}>
         <boxGeometry args={[0.18, 0.045, 0.22]} />
         <meshStandardMaterial color="#2e2e2e" metalness={0.6} roughness={0.35} />
@@ -512,9 +623,10 @@ function RoverModel() {
   );
 }
 
-function VehicleModel() {
+function VehicleModel({ children }: { children?: ReactNode }) {
   return (
     <group scale={0.94} rotation={[0, 0.4, 0]}>
+      {children}
       <RoundedBox args={[1.28, 0.3, 0.68]} radius={0.07} smoothness={3} position={[0, 0.46, 0]}>
         <meshStandardMaterial color="#f3f2ee" metalness={0.35} roughness={0.36} />
       </RoundedBox>
@@ -559,7 +671,7 @@ function VehicleModel() {
   );
 }
 
-function RoboticsModel() {
+function RoboticsModel({ children }: { children?: ReactNode }) {
   const cone = useRef<THREE.Mesh>(null);
   const camera = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
@@ -575,6 +687,7 @@ function RoboticsModel() {
 
   return (
     <group scale={0.92} rotation={[0, -0.25, 0]}>
+      {children}
       <RoundedBox args={[1.42, 0.08, 0.9]} radius={0.03} smoothness={3} position={[0, 0.13, 0]}>
         <meshStandardMaterial color="#1f7a3f" metalness={0.35} roughness={0.45} />
       </RoundedBox>
@@ -644,23 +757,23 @@ function RoboticsModel() {
   );
 }
 
-export function LabModel({ id }: { id: string }) {
+export function LabModel({ id, children }: { id: string; children?: ReactNode }) {
   switch (id) {
     case "arduino-lab":
-      return <ArduinoModel />;
+      return <ArduinoModel>{children}</ArduinoModel>;
     case "esp32-lab":
-      return <Esp32Model />;
+      return <Esp32Model>{children}</Esp32Model>;
     case "protocol-explorer":
-      return <ProtocolModel />;
+      return <ProtocolModel>{children}</ProtocolModel>;
     case "electronics-101":
-      return <ElectronicsModel />;
+      return <ElectronicsModel>{children}</ElectronicsModel>;
     case "roverkit-lab":
-      return <RoverModel />;
+      return <RoverModel>{children}</RoverModel>;
     case "vehicle-explorer":
-      return <VehicleModel />;
+      return <VehicleModel>{children}</VehicleModel>;
     case "robotics-lab":
-      return <RoboticsModel />;
+      return <RoboticsModel>{children}</RoboticsModel>;
     default:
-      return <ArduinoModel />;
+      return <ArduinoModel>{children}</ArduinoModel>;
   }
 }

@@ -126,7 +126,7 @@ export default function CommunityPage() {
             title="Four commitments, not four features."
             description="These pillars describe how the community behaves. They are the reason a shared lab session feels different from watching a tutorial alone."
           />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {communityPillars.map((pillar, index) => (
               <Reveal key={pillar.title} delay={index * 0.07}>
                 <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-ink/[0.07] bg-white p-6 transition-all duration-500 hover:-translate-y-1 hover:border-spark-dark/40 hover:shadow-card">
