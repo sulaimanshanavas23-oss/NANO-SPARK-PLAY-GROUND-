@@ -9,6 +9,7 @@ import {
   Line,
   OrbitControls,
   useCursor,
+  useTexture,
 } from "@react-three/drei";
 import * as THREE from "three";
 import { labs, type Lab } from "@/src/lib/labs";
@@ -286,7 +287,71 @@ function Spokes() {
   );
 }
 
-function CentralHub() {
+const HUB_LOGO_SIZE = 1.36;
+
+function CentralHub({
+  onReset,
+  reduceMotion,
+}: {
+  onReset: () => void;
+  reduceMotion: boolean;
+}) {
+  const [logoTexture, glowTexture] = useTexture([
+    "/branding/nano-spark-hub-mark.png",
+    "/branding/nano-spark-hub-glow.png",
+  ]);
+  const logoGroup = useRef<THREE.Group>(null);
+  const glowMaterial = useRef<THREE.MeshBasicMaterial>(null);
+  const glowMesh = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered);
+
+  useEffect(() => {
+    [logoTexture, glowTexture].forEach((texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 8;
+      texture.needsUpdate = true;
+    });
+  }, [logoTexture, glowTexture]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = "auto";
+    };
+  }, []);
+
+  useFrame(({ clock }, delta) => {
+    if (!glowMaterial.current || !glowMesh.current) return;
+    const k = 1 - Math.exp(-delta * 5);
+    const wave = reduceMotion
+      ? 0.5
+      : 0.5 + 0.5 * Math.sin((clock.elapsedTime * Math.PI * 2) / 3.6);
+    const targetOpacity = hovered ? 0.55 + wave * 0.3 : 0.26 + wave * 0.16;
+    glowMaterial.current.opacity = THREE.MathUtils.lerp(
+      glowMaterial.current.opacity,
+      targetOpacity,
+      k,
+    );
+    const targetScale = 1 + wave * 0.06 + (hovered ? 0.08 : 0);
+    glowMesh.current.scale.setScalar(
+      THREE.MathUtils.lerp(glowMesh.current.scale.x, targetScale, k),
+    );
+    if (logoGroup.current) {
+      const target = hovered ? 1.05 : 1;
+      const scale = THREE.MathUtils.lerp(
+        logoGroup.current.scale.x,
+        target,
+        k,
+      );
+      logoGroup.current.scale.setScalar(scale);
+      logoGroup.current.position.y = THREE.MathUtils.lerp(
+        logoGroup.current.position.y,
+        hovered ? 0.03 : 0,
+        k,
+      );
+    }
+  });
+
   return (
     <group position={[0, 0, 0]}>
       <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
@@ -302,21 +367,71 @@ function CentralHub() {
           toneMapped={false}
         />
       </mesh>
-      <Html center position={[0, 1.2, 0]} zIndexRange={[40, 20]}>
-        <div className="flex w-[180px] flex-col items-center gap-1 rounded-2xl border border-ink/10 bg-white/95 px-3 py-3 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/branding/nano-spark-logo.jpeg"
-            alt="Nano Spark"
-            className="h-24 w-24 object-contain"
+
+      <group position={[0, 0.215, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh ref={glowMesh} position={[0, 0, 0.006]}>
+          <planeGeometry args={[HUB_LOGO_SIZE * 1.55, HUB_LOGO_SIZE * 1.55]} />
+          <meshBasicMaterial
+            ref={glowMaterial}
+            map={glowTexture}
+            color="#FFC107"
+            transparent
+            opacity={0.3}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            toneMapped={false}
           />
-          <p className="font-display text-[10px] font-extrabold uppercase leading-tight tracking-[0.2em] text-ink">
+        </mesh>
+        <group ref={logoGroup} position={[0, 0, 0.012]}>
+          <mesh
+            onClick={(event) => {
+              event.stopPropagation();
+              onReset();
+            }}
+            onPointerOver={(event) => {
+              event.stopPropagation();
+              setHovered(true);
+            }}
+            onPointerOut={() => setHovered(false)}
+          >
+            <planeGeometry args={[HUB_LOGO_SIZE, HUB_LOGO_SIZE]} />
+            <meshBasicMaterial
+              map={logoTexture}
+              transparent
+              alphaTest={0.08}
+              depthWrite={false}
+              toneMapped={false}
+              polygonOffset
+              polygonOffsetFactor={-1}
+            />
+          </mesh>
+        </group>
+      </group>
+
+      <Html center position={[0, 1.2, 0]} zIndexRange={[40, 20]}>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onReset();
+          }}
+          onPointerEnter={() => setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
+          className={cn(
+            "min-w-[128px] rounded-xl border bg-ink/90 px-3 py-2 text-left shadow-[0_8px_30px_rgba(0,0,0,0.22)] transition-colors sm:min-w-[156px]",
+            hovered
+              ? "border-spark-yellow/50 bg-ink/95"
+              : "border-white/10 hover:border-spark-yellow/35",
+          )}
+          aria-label="Reset campus view"
+        >
+          <span className="block font-mono text-[8.5px] font-semibold uppercase tracking-[0.18em] text-spark-yellow sm:text-[9px]">
             Nano Spark
-            <span className="mt-0.5 block text-[9px] font-bold tracking-[0.24em] text-spark-dark">
-              Play Ground
-            </span>
-          </p>
-        </div>
+          </span>
+          <span className="mt-1 block whitespace-nowrap text-[12px] font-semibold leading-tight text-white sm:text-[14px]">
+            Innovation Hub
+          </span>
+        </button>
       </Html>
     </group>
   );
@@ -532,6 +647,7 @@ function LabStation({
 function Scene({
   selectedId,
   onSelect,
+  onReset,
   exploded,
   autoRotate,
   rotationSpeed,
@@ -542,6 +658,7 @@ function Scene({
 }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onReset: () => void;
   exploded: boolean;
   autoRotate: boolean;
   rotationSpeed: number;
@@ -587,7 +704,7 @@ function Scene({
       <Ground quality={quality} />
       <Pathways exploded={exploded} />
       <Spokes />
-      <CentralHub />
+      <CentralHub onReset={onReset} reduceMotion={reduceMotion} />
       <ContactShadows
         position={[0, 0.008, 0]}
         opacity={0.28}
@@ -646,6 +763,7 @@ function Scene({
 export default function CampusCanvas({
   selectedId,
   onSelect,
+  onReset = () => {},
   exploded = false,
   autoRotate = false,
   rotationSpeed = 0.55,
@@ -655,6 +773,7 @@ export default function CampusCanvas({
 }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onReset?: () => void;
   exploded?: boolean;
   autoRotate?: boolean;
   rotationSpeed?: number;
@@ -683,6 +802,7 @@ export default function CampusCanvas({
           <Scene
             selectedId={selectedId}
             onSelect={onSelect}
+            onReset={onReset}
             exploded={exploded}
             autoRotate={autoRotate}
             rotationSpeed={rotationSpeed}

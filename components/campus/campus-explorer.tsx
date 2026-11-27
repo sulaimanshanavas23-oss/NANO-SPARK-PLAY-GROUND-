@@ -185,6 +185,7 @@ export function CampusExplorer({
           <CampusCanvas
             selectedId={selectedId}
             onSelect={handleSelect}
+            onReset={reset}
             exploded={exploded}
             autoRotate={autoRotate && rotationSpeed > 0}
             rotationSpeed={rotationSpeed}
