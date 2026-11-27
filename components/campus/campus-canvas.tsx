@@ -407,32 +407,6 @@ function CentralHub({
           </mesh>
         </group>
       </group>
-
-      <Html center position={[0, 1.2, 0]} zIndexRange={[40, 20]}>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onReset();
-          }}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-          className={cn(
-            "min-w-[128px] rounded-xl border bg-ink/90 px-3 py-2 text-left shadow-[0_8px_30px_rgba(0,0,0,0.22)] transition-colors sm:min-w-[156px]",
-            hovered
-              ? "border-spark-yellow/50 bg-ink/95"
-              : "border-white/10 hover:border-spark-yellow/35",
-          )}
-          aria-label="Reset campus view"
-        >
-          <span className="block font-mono text-[8.5px] font-semibold uppercase tracking-[0.18em] text-spark-yellow sm:text-[9px]">
-            Nano Spark
-          </span>
-          <span className="mt-1 block whitespace-nowrap text-[12px] font-semibold leading-tight text-white sm:text-[14px]">
-            Innovation Hub
-          </span>
-        </button>
-      </Html>
     </group>
   );
 }
