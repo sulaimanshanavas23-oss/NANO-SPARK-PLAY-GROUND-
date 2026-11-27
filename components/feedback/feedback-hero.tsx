@@ -82,7 +82,10 @@ export function FeedbackHero() {
           <span className="text-[10px] text-spark-dark">&#9654;</span>
           Feedback
         </p>
-        <h1 className="perspective-800 mt-4 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+        <h1
+          data-ns-reveal="off"
+          className="perspective-800 mt-4 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl"
+        >
           <LetterReveal text="Tell us how it went" />
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-ink/70">

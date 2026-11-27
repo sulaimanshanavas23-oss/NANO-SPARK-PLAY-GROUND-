@@ -104,20 +104,14 @@ export function FeedbackMarquee() {
       <div className="mx-auto w-full max-w-6xl px-6 sm:px-8">
         <FeedbackSectionHeading
           eyebrow="Voices from our workshops"
-          title={
-            <>
-              Feedback that floats in{" "}
-              <span className="text-spark-dark">
-                from students &amp; parents
-              </span>
-            </>
-          }
+          title="Feedback that floats in from students & parents"
+          highlight={["students", "parents"]}
           description="We've attended Nano Spark workshops and gained valuable experience — from our first introduction to electronics to building complete projects."
         />
       </div>
 
       <div className="mask-fade-x relative mt-10 overflow-hidden">
-        <div className="ns-marquee flex w-max">
+        <div className="ns-marquee-track flex w-max will-change-transform">
           <VoiceGroup />
           <VoiceGroup ariaHidden />
         </div>

@@ -661,3 +661,175 @@ body {
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* About page — Nano Spark identity                                    */
+/* ------------------------------------------------------------------ */
+.ns-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.ns-gold-rule {
+  background-image: linear-gradient(135deg, #f7b500 0%, #ffd54f 100%);
+}
+
+.ns-dot-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(17, 17, 17, 0.1) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+}
+
+.ns-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+  transition:
+    background-color 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease;
+  box-shadow: 0 4px 20px rgba(17, 17, 17, 0.08);
+}
+
+.ns-btn-yellow {
+  background: #ffc107;
+  color: #111111;
+}
+.ns-btn-yellow:hover {
+  background: #111111;
+  color: #ffc107;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.16);
+}
+
+.ns-btn-dark {
+  background: #111111;
+  color: #ffffff;
+}
+.ns-btn-dark:hover {
+  background: #ffc107;
+  color: #111111;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.16);
+}
+
+.ns-btn-outline {
+  border: 2px solid #111111;
+  background: transparent;
+  color: #111111;
+}
+.ns-btn-outline:hover {
+  background: #111111;
+  color: #ffc107;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.16);
+}
+
+.ns-btn-outline-light {
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: transparent;
+  color: #ffffff;
+}
+.ns-btn-outline-light:hover {
+  border-color: #ffc107;
+  background: #ffc107;
+  color: #111111;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.16);
+}
+
+.ns-btn:focus-visible,
+.ns-trust-pill:focus-visible {
+  outline: 2px solid #ffc107;
+  outline-offset: 3px;
+}
+
+.ns-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  background: rgba(255, 193, 7, 0.1);
+  padding: 0.4rem 0.9rem;
+  color: #ffc107;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Global word reveal (applied to page headings on scroll)             */
+/* ------------------------------------------------------------------ */
+.ns-split .ns-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.ns-split .ns-word-inner {
+  display: inline-block;
+  transform: translateY(115%) rotate(3deg);
+  opacity: 0;
+  transition:
+    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease-out;
+  transition-delay: calc(var(--ns-wi, 0) * 30ms);
+  will-change: transform, opacity;
+}
+
+.ns-split.is-revealed .ns-word-inner {
+  transform: translateY(0) rotate(0deg);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ns-split .ns-word-inner {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  .ns-btn,
+  .ns-btn:hover {
+    transform: none !important;
+  }
+}
+
+.ns-node {
+  animation: ns-node-pulse 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes ns-node-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ns-node {
+    animation: none !important;
+  }
+}

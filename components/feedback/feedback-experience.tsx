@@ -30,12 +30,8 @@ export function FeedbackExperience() {
         <div className="mx-auto w-full max-w-6xl px-6 sm:px-8">
           <FeedbackSectionHeading
             eyebrow="What people say"
-            title={
-              <>
-                Voices from our{" "}
-                <span className="text-spark-dark">community</span>
-              </>
-            }
+            title="Voices from our community"
+            highlight={["community"]}
             description="Real feedback from the students, teachers and parents who build with Nano Spark — in classrooms, clubs and weekend workshops."
           />
           <TestimonialGrid />

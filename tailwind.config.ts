@@ -43,12 +43,20 @@ const config: Config = {
       backgroundImage: {
         "dot-grid":
           "radial-gradient(circle, rgba(17,17,17,0.10) 1px, transparent 1px)",
+        "dot-grid-fine":
+          "radial-gradient(circle, rgba(17,17,17,0.10) 1px, transparent 1px)",
         "spark-gradient":
           "linear-gradient(135deg, #FFD54F 0%, #FFC107 45%, #F7B500 100%)",
+        "gold-gradient":
+          "linear-gradient(135deg, #F7B500 0%, #FFD54F 100%)",
+      },
+      backgroundSize: {
+        "dot-26": "26px 26px",
       },
       animation: {
         "pulse-glow": "pulseGlow 2.8s ease-in-out infinite",
         marquee: "marquee 34s linear infinite",
+        "marquee-38": "marquee 38s linear infinite",
         float: "float 6s ease-in-out infinite",
         "spin-slow": "spin 14s linear infinite",
       },

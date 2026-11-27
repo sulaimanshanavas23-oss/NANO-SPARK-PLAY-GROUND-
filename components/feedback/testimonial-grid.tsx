@@ -66,7 +66,7 @@ export function TestimonialGrid() {
           key={testimonial.name}
           initial={reduceMotion ? false : { opacity: 0, y: 28 }}
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-60px" }}
           transition={{
             duration: 0.6,
             delay: index * 0.12,

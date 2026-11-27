@@ -5,6 +5,8 @@ import "./globals.css";
 import { Providers } from "@/components/shared/providers";
 import { Navbar } from "@/components/navigation/navbar";
 import { Footer } from "@/components/shared/footer";
+import { BackToTop } from "@/components/shared/back-to-top";
+import { GlobalTextReveal } from "@/components/shared/global-text-reveal";
 import { assets } from "@/src/lib/assets";
 
 const baloo = Baloo_2({
@@ -89,6 +91,8 @@ export default function RootLayout({
           <Navbar />
           <main id="main">{children}</main>
           <Footer />
+          <BackToTop />
+          <GlobalTextReveal />
         </Providers>
       </body>
     </html>
