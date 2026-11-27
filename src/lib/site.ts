@@ -20,7 +20,7 @@ export const site = {
   message: "Small Ideas. Big Impact.",
   description:
     "One platform. Seven interactive labs. Endless learning. Explore electronics, microcontrollers, networking, robotics, AI and real-world technology experiments.",
-  url: "https://nano-playground.vercel.app",
+  url: "https://nanoplayground.vercel.app",
 };
 
 export const stats = [

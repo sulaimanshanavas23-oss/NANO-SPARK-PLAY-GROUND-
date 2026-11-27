@@ -21,7 +21,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://nano-playground.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://nanoplayground.vercel.app",
   ),
   title: {
     default: "Nano Playground — Learn. Build. Innovate. | Nano Spark",
