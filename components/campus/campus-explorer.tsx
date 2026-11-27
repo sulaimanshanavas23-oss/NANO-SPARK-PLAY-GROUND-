@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -99,6 +99,7 @@ export function CampusExplorer({
   const webgl = useWebGLAvailable();
   const reduceMotion = useReducedMotion() ?? false;
   const containerRef = useRef<HTMLDivElement>(null);
+  const openTimer = useRef<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [exploded, setExploded] = useState(defaultExploded);
@@ -111,12 +112,42 @@ export function CampusExplorer({
     [selectedId],
   );
 
+  function clearOpenTimer() {
+    if (openTimer.current === null) return;
+    window.clearTimeout(openTimer.current);
+    openTimer.current = null;
+  }
+
+  useEffect(
+    () => () => {
+      if (openTimer.current !== null) {
+        window.clearTimeout(openTimer.current);
+      }
+    },
+    [],
+  );
+
   function handleSelect(id: string | null) {
+    clearOpenTimer();
     setSelectedId(id);
-    setViewerOpen(Boolean(id));
+
+    if (!id) {
+      setViewerOpen(false);
+      return;
+    }
+
+    setViewerOpen(false);
+    openTimer.current = window.setTimeout(
+      () => {
+        setViewerOpen(true);
+        openTimer.current = null;
+      },
+      reduceMotion ? 0 : 950,
+    );
   }
 
   function reset() {
+    clearOpenTimer();
     setSelectedId(null);
     setViewerOpen(false);
     setExploded(false);
@@ -209,8 +240,8 @@ export function CampusExplorer({
               <button
                 onClick={reset}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Reset view"
-                title="Reset view"
+                aria-label="Recenter view"
+                title="Recenter view"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
