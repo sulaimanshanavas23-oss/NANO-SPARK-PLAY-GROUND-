@@ -1,0 +1,377 @@
+ "use client";
+
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useGLTF, OrbitControls } from "@react-three/drei";
+import { Suspense, useRef } from "react";
+import * as THREE from "three";
+
+function HardwareModel({ path, hovered }: {
+  path: string;
+  hovered: boolean;
+}) {
+  const { scene } = useGLTF(path);
+  const model = useRef<THREE.Group>(null);
+
+  useFrame((state, delta) => {
+    if (!model.current) return;
+
+    model.current.rotation.y += delta * (hovered ? 0.7 : 0.12);
+
+    const targetScale = hovered ? 1.25 : 1;
+
+    model.current.scale.lerp(
+      new THREE.Vector3(targetScale, targetScale, targetScale),
+      1 - Math.exp(-8 * delta)
+    );
+
+    model.current.position.y = THREE.MathUtils.damp(
+      model.current.position.y,
+      hovered ? 0.2 : 0,
+      8,
+      delta
+    );
+  });
+
+  return (
+    <group ref={model}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+export default function InteractiveLabModel({
+  modelPath,
+  hovered
+}: {
+  modelPath: string;
+  hovered: boolean;
+}) {
+  return (
+    <div className="h-full w-full bg-[#FFF8E8]">
+      <Canvas camera={{ position: [3, 2, 4], fov: 40 }}>
+        <ambientLight intensity={1.5} />
+        <directionalLight position={[4, 5, 5]} intensity={2} />
+        <Suspense fallback={null}>
+          <HardwareModel path={modelPath} hovered={hovered} />
+          <OrbitControls enableZoom={false} />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+} # MASTER PROMPT – EXACT SEVEN LABS DESIGN WITH REAL INTERACTIVE 3D MODELS
+
+Act as a senior frontend developer, Three.js engineer and professional 3D web experience developer.
+
+I have uploaded my exact design reference into:
+
+public/images/seven-labs-campus.png
+
+THIS IMAGE IS MY DESIGN BLUEPRINT.
+
+I want you to recreate this exact homepage design in my existing website, but replace all static product pictures with real interactive 3D engineering models.
+
+## CRITICAL DESIGN RULE
+
+The reference image must be followed as closely as possible.
+
+Do not redesign it.
+Do not generate a new layout.
+Do not change the card positions.
+Do not change the margins.
+Do not change typography.
+Do not change font weights.
+Do not change the header alignment.
+Do not change card dimensions unnecessarily.
+Do not change the yellow, white and black theme.
+
+Preserve the existing design's visual proportions.
+
+Use the reference image to measure and reproduce:
+- Header height.
+- Left and right page margins.
+- Hero heading position.
+- Heading size and font weight.
+- Description alignment.
+- Card grid dimensions.
+- Card gaps.
+- Image preview proportions.
+- Card padding.
+- Button positions.
+- Playground banner dimensions.
+- Border radius.
+- Shadows.
+
+IMPORTANT: The screenshot is a reference only. Do not display it as one flattened image on the homepage.
+
+## 1. EXACT PAGE STRUCTURE
+
+Recreate the same structure:
+
+HEADER:
+- Yellow 7 Interactive Labs badge.
+- Heading: Seven labs. One connected campus.
+- Supporting description.
+- Explore all labs button.
+- Campus illustration on the right.
+
+LAB GRID:
+- Three columns on desktop.
+- First row: Lab 01, Lab 02, Lab 03.
+- Second row: Lab 04, Lab 05, Lab 06.
+- Third row: Lab 07 and large playground banner.
+
+Maintain the exact visual alignment of the reference.
+
+## 2. REPLACE STATIC IMAGES WITH REAL 3D MODELS
+
+Use React Three Fiber, Three.js and Drei.
+
+Every model must be a separate actual 3D object.
+
+LAB 01 – ARDUINO:
+Use a realistic Arduino UNO R3 GLB model.
+Show the blue PCB, USB connector, ATmega328P chip and GPIO pins.
+
+LAB 02 – ESP32:
+Use a realistic ESP32 DevKit V1 model.
+Show the black PCB, metal-shielded ESP32 module, GPIO headers and USB connector.
+
+LAB 03 – PROTOCOL EXPLORER:
+Use a 3D rotating Earth globe with network routers, servers and animated connection lines.
+
+LAB 04 – ELECTRONICS:
+Use a realistic breadboard with LEDs, resistors, capacitors and jumper wires.
+
+LAB 05 – ROVERKIT:
+Use a yellow-and-black four-wheel smart rover with ultrasonic sensor, motors and chassis.
+
+LAB 06 – VEHICLE EXPLORER:
+Use a realistic six-wheel robotic exploration vehicle with suspension, chassis and camera.
+
+LAB 07 – ROBOTICS:
+Use a Raspberry Pi robotics platform with camera, sensors, controller and robot chassis.
+
+## 3. 3D MODEL HOVER ANIMATION
+
+Implement the same animation on all seven previews.
+
+NORMAL:
+- Center the model.
+- Add subtle floating animation.
+- Display a yellow glowing circular platform.
+
+MOUSE ENTER:
+- Scale model to 1.2–1.3x.
+- Lift model slightly.
+- Add subtle yellow glow.
+- Start smooth rotation.
+- Add a slight perspective effect.
+
+MOUSE MOVE:
+- Tilt model toward cursor position.
+- Smoothly interpolate rotation.
+- Avoid sudden movements.
+
+MOUSE LEAVE:
+- Return to original scale.
+- Reset rotation smoothly.
+- Restore original position.
+
+CLICK:
+- Open a large interactive 3D viewer.
+- Support 360-degree rotation.
+- Support zoom and pan.
+- Allow component inspection.
+- Provide reset camera control.
+
+On mobile, implement touch-and-drag rotation instead of mouse-only interactions.
+
+## 4. EXACT DESIGN THEME
+
+Use these colours:
+
+Yellow: #FFC400
+Orange: #FFB000
+Black: #111111
+White: #FFFFFF
+Cream: #FFF8E8
+Border: #EAEAEA
+
+Maintain:
+- White background.
+- Cream 3D preview sections.
+- Yellow illuminated product platforms.
+- Black headings.
+- Yellow CTA buttons.
+- Rounded white cards.
+- Subtle shadows.
+- Same typography hierarchy.
+
+## 5. 3D ASSET STRUCTURE
+
+Use these paths:
+
+public/models/arduino/arduino-uno.glb
+public/models/esp32/esp32-devkit.glb
+public/models/protocol/network-globe.glb
+public/models/electronics/breadboard.glb
+public/models/rover/smart-rover.glb
+public/models/vehicle/six-wheel-rover.glb
+public/models/robotics/raspberry-pi-robot.glb
+
+If assets do not exist:
+- Create suitable temporary 3D geometry.
+- Clearly identify temporary placeholders.
+- Do not show a missing model as a completed real hardware model.
+- Do not use the screenshot itself as a replacement for 3D objects.
+
+## 6. RESPONSIVE DESIGN
+
+Desktop:
+Preserve the three-column design.
+
+Laptop:
+Maintain the same visual hierarchy with adjusted widths.
+
+Tablet:
+Use two columns.
+
+Mobile:
+Use one column with appropriately sized 3D previews and readable text.
+
+Never stretch the models or crop their important components.
+
+## 7. TECHNICAL REQUIREMENTS
+
+Inspect the existing project before changing anything.
+
+Reuse existing:
+- Framework.
+- CSS.
+- Components.
+- Fonts.
+- Routing.
+- Animation libraries.
+
+Use:
+- Three.js.
+- React Three Fiber.
+- @react-three/drei.
+- GLB/GLTF models.
+- Existing project styling.
+
+Create reusable components:
+- SevenLabsSection
+- LabCard
+- Interactive3DModel
+- Lab3DViewer
+- YellowPlatform
+- PlaygroundBanner
+
+Lazy-load the individual 3D models.
+
+Do not load all seven high-quality models simultaneously.
+
+Optimize performance and dispose of unused resources.
+
+## 8. FINAL IMPLEMENTATION RULES
+
+Do not replace the entire existing website.
+Do not delete unrelated sections.
+Do not change working routes.
+Do not remove existing functionality.
+Do not introduce unnecessary dependencies.
+
+First inspect the existing code and reference image.
+
+Then implement the Seven Labs homepage section.
+
+Compare the completed page against public/images/seven-labs-campus.png.
+
+Match its layout, typography, spacing, proportions and alignment as closely as possible.
+
+Finally test:
+- All seven 3D models.
+- Hover animations.
+- Touch interactions.
+- 3D preview modal.
+- Responsive layouts.
+- All buttons and navigation.
+
+The final result must look almost identical to my reference screenshot, except the product visuals must be genuine interactive 3D models. "use client";
+
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useGLTF, OrbitControls } from "@react-three/drei";
+import { Suspense, useRef } from "react";
+import * as THREE from "three";
+
+function HardwareModel({ path, hovered }: {
+  path: string;
+  hovered: boolean;
+}) {
+  const { scene } = useGLTF(path);
+  const model = useRef<THREE.Group>(null);
+
+  useFrame((state, delta) => {
+    if (!model.current) return;
+
+    model.current.rotation.y += delta * (hovered ? 0.7 : 0.12);
+
+    const targetScale = hovered ? 1.25 : 1;
+
+    model.current.scale.lerp(
+      new THREE.Vector3(targetScale, targetScale, targetScale),
+      1 - Math.exp(-8 * delta)
+    );
+
+    model.current.position.y = THREE.MathUtils.damp(
+      model.current.position.y,
+      hovered ? 0.2 : 0,
+      8,
+      delta
+    );
+  });
+
+  return (
+    <group ref={model}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+export default function InteractiveLabModel({
+  modelPath,
+  hovered
+}: {
+  modelPath: string;
+  hovered: boolean;
+}) {
+  return (
+    <div className="h-full w-full bg-[#FFF8E8]">
+      <Canvas camera={{ position: [3, 2, 4], fov: 40 }}>
+        <ambientLight intensity={1.5} />
+        <directionalLight position={[4, 5, 5]} intensity={2} />
+        <Suspense fallback={null}>
+          <HardwareModel path={modelPath} hovered={hovered} />
+          <OrbitControls enableZoom={false} />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+} contniu e comalete all teh chanegs add to teh github hist it on the vercel all teh changes anlaye the pormpt and all teh coddings complet al the assigned adnd tood and upate sid eby side  Inspect my existing website project and add my uploaded image `public/images/seven-labs-campus.png` to the Seven Labs section.
+
+Requirements:
+
+1. Use the exact uploaded image without changing its design.
+2. Display it across the full available width.
+3. Maintain its original aspect ratio.
+4. Do not crop, stretch or distort the image.
+5. Make it fully responsive on mobile, tablet, laptop and desktop.
+6. Remove the old duplicate Seven Labs section if necessary.
+7. Preserve the yellow, white and black website theme.
+8. Do not modify unrelated website sections.
+9. Preserve existing navigation and other functionality.
+
+Use the existing framework and coding conventions. Inspect the relevant files before editing. Implement the changes directly and verify the result at different screen sizes.
+
+Important: Do not replace functional website buttons with a flattened screenshot. If the image is used as a visual reference, keep the actual lab cards and buttons functional. Make the changes directly in the existing project and provide a final report of the pages tested, issues fixed and remaining issues. add auto rotate in 3d labs whiel selecting the lab from the isometric 3d it nedd to show kike this [Image 1] this popo in centre big ly and need to sho that 3d model selcted model popo in teh centre little big adn add lal the add this code changes in the github uupdate s tin the vercel the home page the top left corner teh nano spark logo was liek msall little bigger like this [Image 2] like this iameg adn beside nanos aspark logo remove teh nano play ground and add teh fromation tab like thi home and the play groudn tab  explore labs adn the tools adn the showrooms tab adn the tools adn platform and the learn project cooomunity about paegg feedback and conatcts tabs remoe the sign in option in the sign in tab in the webiste add this tab add teh quiox generttore if th e user or a person uplaod 1 pdf image jpg png or any folder by analaying teh pdf or teh osurce the webiste has to understand and need to generte a quix liek an MCQ it need to shoe th option like quix with an mcq and teh fill in blans options add all teh os features  add this chanegs ad dto the github and host it on the vercel the teh quiz genratot implemenet increese teh size of teh logo it was very smal make it biugger little 

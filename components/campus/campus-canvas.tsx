@@ -2,27 +2,69 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Sparkles, useCursor } from "@react-three/drei";
+import {
+  ContactShadows,
+  Grid,
+  Html,
+  OrbitControls,
+  useCursor,
+} from "@react-three/drei";
 import * as THREE from "three";
 import { labs, type Lab } from "@/src/lib/labs";
 import { LabModel } from "@/components/campus/lab-models";
-import { StationLabel } from "@/components/shared/station-label";
 import {
   QUALITY_SETTINGS,
   useDeviceQuality,
   useSceneActivity,
   type SceneQuality,
 } from "@/src/lib/use-device-quality";
+import { cn } from "@/src/lib/utils";
 
-export const LAB_POSITIONS: Record<string, [number, number, number]> = {
-  "arduino-lab": [-3.4, 0, -2.75],
-  "esp32-lab": [0, 0, -3.7],
-  "protocol-explorer": [3.4, 0, -2.75],
-  "electronics-101": [-4.35, 0, 0.35],
-  "roverkit-lab": [0, 0, 0.15],
-  "vehicle-explorer": [4.35, 0, 0.35],
-  "robotics-lab": [0, 0, 3.5],
+const RING_RADIUS = 5.2;
+const STATION_RADIUS = 1.2;
+const CAMERA_FOV = 20;
+const CAMERA_AZIMUTH = Math.PI / 4;
+const CAMERA_ELEVATION = THREE.MathUtils.degToRad(35);
+const CAMERA_DIRECTION = new THREE.Vector3(
+  Math.cos(CAMERA_AZIMUTH) * Math.cos(CAMERA_ELEVATION),
+  Math.sin(CAMERA_ELEVATION),
+  Math.sin(CAMERA_AZIMUTH) * Math.cos(CAMERA_ELEVATION),
+).normalize();
+
+const LAB_ORDER = [
+  "arduino-lab",
+  "esp32-lab",
+  "protocol-explorer",
+  "electronics-101",
+  "roverkit-lab",
+  "vehicle-explorer",
+  "robotics-lab",
+] as const;
+
+export type StationConfig = {
+  id: string;
+  index: number;
+  angle: number;
+  position: [number, number, number];
 };
+
+export const LAB_STATIONS: StationConfig[] = LAB_ORDER.map((id, index) => {
+  const angle = Math.PI / 2 + (index / LAB_ORDER.length) * Math.PI * 2;
+  return {
+    id,
+    index,
+    angle,
+    position: [
+      Math.cos(angle) * RING_RADIUS,
+      0,
+      Math.sin(angle) * RING_RADIUS,
+    ],
+  };
+});
+
+export const LAB_POSITIONS = Object.fromEntries(
+  LAB_STATIONS.map((station) => [station.id, station.position]),
+) as Record<string, [number, number, number]>;
 
 type ControlsLike = {
   target: THREE.Vector3;
@@ -30,18 +72,33 @@ type ControlsLike = {
   autoRotate: boolean;
 };
 
+function getFitDistance(
+  size: { width: number; height: number },
+  exploded: boolean,
+) {
+  const aspect = Math.max(size.width / Math.max(size.height, 1), 0.35);
+  const verticalFov = THREE.MathUtils.degToRad(CAMERA_FOV);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+  const limitingFov = Math.min(verticalFov, horizontalFov);
+  const radius =
+    RING_RADIUS * (exploded ? 1.55 : 1) + STATION_RADIUS + 0.4;
+  return (radius * 1.12) / Math.sin(limitingFov / 2);
+}
+
 function CameraRig({
   selectedId,
   exploded,
   zoom,
   resetSignal,
   reduceMotion,
+  fitDistance,
 }: {
   selectedId: string | null;
   exploded: boolean;
   zoom: number;
   resetSignal: number;
   reduceMotion: boolean;
+  fitDistance: number;
 }) {
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as ControlsLike | null;
@@ -57,270 +114,260 @@ function CameraRig({
 
   useEffect(() => {
     if (!controls) return;
+
     const base = selectedId ? LAB_POSITIONS[selectedId] : null;
     const mobile = size.width < 640;
-    const largeFrame =
-      size.width >= 2560 ? 1.34 : size.width >= 1920 ? 1.18 : 1;
+    const zoomFactor = 1 - zoom * 0.1;
     const target = base
       ? new THREE.Vector3(
           base[0] * (exploded ? 1.5 : 1),
-          (exploded ? 1.85 : 1.25) + 0.1,
+          exploded ? 0.9 : 0.68,
           base[2] * (exploded ? 1.55 : 1),
         )
-      : new THREE.Vector3(0, exploded ? 1.0 : 0.6, 0);
+      : new THREE.Vector3(0, exploded ? 0.85 : 0.55, 0);
 
-    const distance =
-      (base
-        ? (mobile ? 13 : 9.5) + zoom * 1.1
-        : (mobile ? 25 : 19.5) + zoom * 1.6) * (base ? 1 : largeFrame);
-    const direction = (base
-      ? new THREE.Vector3(0.5, 0.62, 1)
-      : new THREE.Vector3(0.72, 0.66, 1)
-    ).normalize();
-    const goalPosition = target.clone().add(direction.multiplyScalar(distance));
+    const distance = base
+      ? (mobile ? 14 : 11.5) * zoomFactor
+      : fitDistance * zoomFactor;
+    const goalPosition = target
+      .clone()
+      .add(CAMERA_DIRECTION.clone().multiplyScalar(distance));
 
     transition.current = {
       start: performance.now(),
-      duration: reduceMotion ? 0 : 950,
+      duration: reduceMotion ? 0 : 900,
       fromPosition: camera.position.clone(),
       toPosition: goalPosition,
       fromTarget: controls.target.clone(),
       toTarget: target,
     };
-  }, [selectedId, exploded, zoom, resetSignal, controls, camera, size.width, reduceMotion]);
+  }, [
+    selectedId,
+    exploded,
+    zoom,
+    resetSignal,
+    controls,
+    camera,
+    size.width,
+    fitDistance,
+    reduceMotion,
+  ]);
 
   useFrame(() => {
     if (!controls || !transition.current) return;
     const { start, duration, fromPosition, toPosition, fromTarget, toTarget } =
       transition.current;
-    const raw = duration === 0 ? 1 : Math.min(1, (performance.now() - start) / duration);
-    const eased = raw < 0.5 ? 2 * raw * raw : 1 - Math.pow(-2 * raw + 2, 2) / 2;
+    const raw =
+      duration === 0
+        ? 1
+        : Math.min(1, (performance.now() - start) / duration);
+    const eased =
+      raw < 0.5 ? 2 * raw * raw : 1 - Math.pow(-2 * raw + 2, 2) / 2;
+
     camera.position.lerpVectors(fromPosition, toPosition, eased);
     controls.target.lerpVectors(fromTarget, toTarget, eased);
     controls.update();
+
     if (raw >= 1) transition.current = null;
   });
 
   return null;
 }
 
+function SceneCleanup() {
+  const { scene } = useThree();
+
+  useEffect(() => {
+    return () => {
+      scene.traverse((object) => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.geometry?.dispose();
+        const materials = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+        materials.forEach((material) => material?.dispose());
+      });
+    };
+  }, [scene]);
+
+  return null;
+}
+
 function Ground({ quality }: { quality: SceneQuality }) {
-  const gridSegments = quality === "low" ? 28 : quality === "medium" ? 40 : 56;
-  const ringSegments = quality === "low" ? 48 : 96;
   return (
     <group>
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.035, 0]}
+        position={[0, -0.05, 0]}
         receiveShadow
       >
-        <circleGeometry args={[30, 72]} />
-        <meshStandardMaterial color="#f6f6f1" roughness={0.92} metalness={0.02} />
+        <circleGeometry args={[60, 72]} />
+        <meshStandardMaterial color="#f7f6f1" roughness={0.96} metalness={0} />
       </mesh>
-      <gridHelper
-        args={[42, gridSegments, "#e0c98a", "#dedbd2"]}
-        position={[0, -0.025, 0]}
+      <Grid
+        position={[0, -0.02, 0]}
+        args={[60, 60]}
+        cellSize={0.6}
+        cellThickness={0.55}
+        cellColor="#d8d4c8"
+        sectionSize={3}
+        sectionThickness={0.9}
+        sectionColor="#cbc7ba"
+        fadeDistance={quality === "low" ? 18 : 23}
+        fadeStrength={2.4}
+        fadeFrom={0}
+        followCamera={false}
+        infiniteGrid={false}
       />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-        <ringGeometry args={[8.15, 8.22, ringSegments]} />
-        <meshBasicMaterial color="#FFB900" transparent opacity={0.5} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
-        <ringGeometry args={[8.3, 8.32, ringSegments]} />
-        <meshBasicMaterial color="#FFC107" transparent opacity={0.22} />
-      </mesh>
     </group>
   );
 }
 
 function Pathways({ exploded }: { exploded: boolean }) {
-  const materials = useRef<THREE.MeshBasicMaterial[]>([]);
-  const glowMaterials = useRef<THREE.MeshBasicMaterial[]>([]);
+  const material = useRef<THREE.MeshBasicMaterial>(null);
+  const geometry = useMemo(() => {
+    const points = Array.from({ length: 96 }, (_, index) => {
+      const angle = (index / 96) * Math.PI * 2;
+      return new THREE.Vector3(
+        Math.cos(angle) * RING_RADIUS,
+        0.02,
+        Math.sin(angle) * RING_RADIUS,
+      );
+    });
+    const curve = new THREE.CatmullRomCurve3(points, true);
+    return new THREE.TubeGeometry(curve, 160, 0.012, 6, true);
+  }, []);
 
-  const tubes = useMemo(
-    () =>
-      labs
-        .map((lab) => {
-          const position = LAB_POSITIONS[lab.id];
-          const length = Math.hypot(position[0], position[2]);
-          if (length < 1) return null;
-          const start = new THREE.Vector3(0, 0.01, 0);
-          const end = new THREE.Vector3(position[0], 0.03, position[2]);
-          const mid = end.clone().multiplyScalar(0.5);
-          mid.y = 0.11;
-          const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-          return {
-            id: lab.id,
-            geometry: new THREE.TubeGeometry(curve, 36, 0.012, 6, false),
-          };
-        })
-        .filter(Boolean) as { id: string; geometry: THREE.TubeGeometry }[],
-    [],
-  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame((_, delta) => {
+    if (!material.current) return;
     const k = 1 - Math.exp(-delta * 5);
-    materials.current.forEach((material) => {
-      if (!material) return;
-      material.opacity = THREE.MathUtils.lerp(
-        material.opacity,
-        exploded ? 0.03 : 0.55,
-        k,
-      );
-    });
-    glowMaterials.current.forEach((material) => {
-      if (!material) return;
-      material.opacity = THREE.MathUtils.lerp(
-        material.opacity,
-        exploded ? 0.01 : 0.13,
-        k,
-      );
-    });
+    material.current.opacity = THREE.MathUtils.lerp(
+      material.current.opacity,
+      exploded ? 0.16 : 0.38,
+      k,
+    );
   });
 
   return (
-    <group>
-      {tubes.map((tube, index) => (
-        <group key={tube.id}>
-          <mesh geometry={tube.geometry}>
-            <meshBasicMaterial
-              ref={(material) => {
-                if (material) materials.current[index] = material;
-              }}
-              color="#FFC107"
-              transparent
-              opacity={0.55}
-              toneMapped={false}
-            />
-          </mesh>
-          <mesh geometry={tube.geometry} scale={[1.8, 1.8, 1.8]}>
-            <meshBasicMaterial
-              ref={(material) => {
-                if (material) glowMaterials.current[index] = material;
-              }}
-              color="#FFB900"
-              transparent
-              opacity={0.13}
-              depthWrite={false}
-              toneMapped={false}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
+    <mesh geometry={geometry}>
+      <meshBasicMaterial
+        ref={material}
+        color="#FFC107"
+        transparent
+        opacity={0.38}
+        toneMapped={false}
+        depthWrite={false}
+      />
+    </mesh>
   );
 }
 
-const BITS = [
-  { angle: 0, radius: 1.05, y: 0.55, kind: "cube", color: "#FFC107" },
-  { angle: 1.1, radius: 0.95, y: 0.75, kind: "chip", color: "#1a1a1a" },
-  { angle: 2.2, radius: 1.15, y: 0.45, kind: "pin", color: "#d8a13a" },
-  { angle: 3.2, radius: 0.9, y: 0.8, kind: "cube", color: "#1a1a1a" },
-  { angle: 4.3, radius: 1.1, y: 0.6, kind: "chip", color: "#FFB900" },
-  { angle: 5.3, radius: 0.98, y: 0.9, kind: "pin", color: "#FFD54F" },
-] as const;
+function clampLabelPosition(
+  element: THREE.Object3D,
+  camera: THREE.Camera,
+  size: { width: number; height: number },
+): [number, number] {
+  const point = new THREE.Vector3();
+  element.getWorldPosition(point);
+  point.project(camera);
 
-function ExplodedBits({ exploded }: { exploded: boolean }) {
-  const groups = useRef<THREE.Group[]>([]);
-  const amount = useRef(0);
+  const x = (point.x * 0.5 + 0.5) * size.width;
+  const y = (-point.y * 0.5 + 0.5) * size.height;
+  const padX = Math.min(92, size.width * 0.18);
+  const padTop = 34;
+  const padBottom = 84;
 
-  useFrame((_, delta) => {
-    amount.current = THREE.MathUtils.damp(
-      amount.current,
-      exploded ? 1 : 0,
-      4.5,
-      delta,
-    );
-    groups.current.forEach((group, index) => {
-      if (!group) return;
-      const bit = BITS[index];
-      const t = amount.current;
-      group.position.set(
-        Math.cos(bit.angle) * bit.radius * (0.5 + t * 1.3),
-        bit.y + t * 1.0,
-        Math.sin(bit.angle) * bit.radius * (0.5 + t * 1.3),
-      );
-      group.scale.setScalar(0.001 + t);
-      group.rotation.y += delta * 0.6;
-      group.rotation.x += delta * 0.2;
-    });
-  });
+  return [
+    THREE.MathUtils.clamp(x, padX, size.width - padX),
+    THREE.MathUtils.clamp(y, padTop, size.height - padBottom),
+  ];
+}
 
+function StationPill({
+  lab,
+  selected,
+  hovered,
+  onHover,
+  onSelect,
+}: {
+  lab: Lab;
+  selected: boolean;
+  hovered: boolean;
+  onHover: (value: boolean) => void;
+  onSelect: () => void;
+}) {
   return (
-    <group>
-      {BITS.map((bit, index) => (
-        <group
-          key={index}
-          ref={(element) => {
-            if (element) groups.current[index] = element;
-          }}
-          scale={0.001}
+    <Html
+      center
+      position={[0, 0.12, 1.42]}
+      zIndexRange={[20, 0]}
+      calculatePosition={clampLabelPosition}
+    >
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+        }}
+        onPointerEnter={() => onHover(true)}
+        onPointerLeave={() => onHover(false)}
+        onFocus={() => onHover(true)}
+        onBlur={() => onHover(false)}
+        className={cn(
+          "min-w-[92px] rounded-xl border bg-ink/90 px-2 py-1.5 text-left shadow-[0_8px_30px_rgba(0,0,0,0.22)] transition-colors sm:min-w-[124px] sm:px-2.5",
+          selected || hovered
+            ? "border-spark-yellow/50 bg-ink/95"
+            : "border-white/10 hover:border-spark-yellow/35",
+        )}
+        aria-label={`Open ${lab.name}`}
+        aria-haspopup="dialog"
+        aria-pressed={selected}
+      >
+        <span className="block font-mono text-[7.5px] font-semibold uppercase tracking-[0.18em] text-spark-yellow sm:text-[8px]">
+          LAB {lab.number}
+        </span>
+        <span className="mt-0.5 block whitespace-nowrap text-[10px] font-semibold leading-tight text-white sm:text-[11px]">
+          {lab.name}
+        </span>
+        <span
+          className={cn(
+            "block overflow-hidden text-[9px] leading-tight text-white/50 transition-all duration-200",
+            hovered ? "mt-0.5 max-h-4 opacity-100" : "max-h-0 opacity-0",
+          )}
         >
-          {bit.kind === "cube" && (
-            <mesh>
-              <boxGeometry args={[0.16, 0.16, 0.16]} />
-              <meshStandardMaterial
-                color={bit.color}
-                metalness={0.6}
-                roughness={0.3}
-                emissive="#FFB900"
-                emissiveIntensity={0.25}
-              />
-            </mesh>
-          )}
-          {bit.kind === "chip" && (
-            <mesh>
-              <boxGeometry args={[0.2, 0.04, 0.14]} />
-              <meshStandardMaterial color={bit.color} metalness={0.7} roughness={0.3} />
-            </mesh>
-          )}
-          {bit.kind === "pin" && (
-            <mesh>
-              <cylinderGeometry args={[0.02, 0.02, 0.28, 8]} />
-              <meshStandardMaterial
-                color={bit.color}
-                metalness={0.9}
-                roughness={0.2}
-                emissive="#FFB900"
-                emissiveIntensity={0.4}
-              />
-            </mesh>
-          )}
-          <mesh>
-            <sphereGeometry args={[0.024, 8, 8]} />
-            <meshBasicMaterial color="#FFC107" toneMapped={false} />
-          </mesh>
-        </group>
-      ))}
-    </group>
+          {lab.tagline}
+        </span>
+      </button>
+    </Html>
   );
 }
 
 function LabStation({
   lab,
+  station,
   selected,
   exploded,
   onSelect,
   reduceMotion,
-  index,
 }: {
   lab: Lab;
+  station: StationConfig;
   selected: boolean;
   exploded: boolean;
   onSelect: (id: string | null) => void;
   reduceMotion: boolean;
-  index: number;
 }) {
   const group = useRef<THREE.Group>(null);
   const model = useRef<THREE.Group>(null);
   const ring = useRef<THREE.MeshStandardMaterial>(null);
-  const glow = useRef<THREE.MeshBasicMaterial>(null);
   const floorRing = useRef<THREE.MeshBasicMaterial>(null);
-  const light = useRef<THREE.PointLight>(null);
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
-  const base = LAB_POSITIONS[lab.id];
+  const base = station.position;
 
   useEffect(() => {
     return () => {
@@ -334,7 +381,7 @@ function LabStation({
     const targetX = base[0] * (exploded ? 1.5 : 1);
     const targetZ = base[2] * (exploded ? 1.55 : 1);
     const targetY =
-      (exploded ? 0.72 : 0) + (hovered ? 0.1 : 0) + (selected ? 0.18 : 0);
+      (exploded ? 0.55 : 0) + (hovered ? 0.08 : 0) + (selected ? 0.12 : 0);
 
     group.current.position.x = THREE.MathUtils.lerp(
       group.current.position.x,
@@ -356,38 +403,24 @@ function LabStation({
     if (ring.current) {
       ring.current.emissiveIntensity = THREE.MathUtils.lerp(
         ring.current.emissiveIntensity,
-        1.2 + highlight * 3.2,
-        k,
-      );
-    }
-    if (glow.current) {
-      glow.current.opacity = THREE.MathUtils.lerp(
-        glow.current.opacity,
-        0.18 + highlight * 0.32,
+        0.9 + highlight * 1.2,
         k,
       );
     }
     if (floorRing.current) {
       floorRing.current.opacity = THREE.MathUtils.lerp(
         floorRing.current.opacity,
-        selected ? 0.75 : hovered ? 0.5 : 0.16,
-        k,
-      );
-    }
-    if (light.current) {
-      light.current.intensity = THREE.MathUtils.lerp(
-        light.current.intensity,
-        5 + highlight * 14,
+        0.12 + highlight * 0.22,
         k,
       );
     }
     if (model.current) {
       const float = reduceMotion
         ? 0
-        : Math.sin(clock.elapsedTime * 1.1 + index) * 0.015;
+        : Math.sin(clock.elapsedTime * 1.1 + station.index) * 0.015;
       model.current.position.y = THREE.MathUtils.lerp(
         model.current.position.y,
-        0.5 + (exploded ? 0.3 : 0) + float,
+        0.5 + (exploded ? 0.2 : 0) + float,
         k,
       );
       if (!reduceMotion) {
@@ -412,84 +445,48 @@ function LabStation({
       onPointerOut={() => setHovered(false)}
     >
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.32, 1.37, 72]} />
+        <ringGeometry args={[1.28, 1.33, 72]} />
         <meshBasicMaterial
           ref={floorRing}
-          color="#FFB900"
+          color="#FFC107"
           transparent
-          opacity={0.16}
+          opacity={0.12}
+          depthWrite={false}
           toneMapped={false}
         />
       </mesh>
 
       <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[1.12, 1.2, 0.4, 56]} />
-        <meshStandardMaterial color="#0f0f10" metalness={0.85} roughness={0.28} />
+        <meshStandardMaterial color="#222222" metalness={0.12} roughness={0.5} />
       </mesh>
       <mesh position={[0, 0.315, 0]} castShadow>
         <cylinderGeometry args={[1.16, 1.16, 0.045, 56]} />
-        <meshStandardMaterial color="#1b1b1d" metalness={0.75} roughness={0.32} />
+        <meshStandardMaterial color="#2b2b2b" metalness={0.08} roughness={0.55} />
       </mesh>
       <mesh position={[0, 0.205, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.155, 0.012, 10, 96]} />
         <meshStandardMaterial
           ref={ring}
           color="#FFC107"
-          emissive="#FFB900"
-          emissiveIntensity={1.4}
-          metalness={0.5}
-          roughness={0.22}
+          emissive="#FFC107"
+          emissiveIntensity={0.9}
+          metalness={0.2}
+          roughness={0.35}
           toneMapped={false}
         />
       </mesh>
-
-      <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.09, 1.33, 72]} />
-        <meshBasicMaterial
-          ref={glow}
-          color="#FFC107"
-          transparent
-          opacity={0.18}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-          toneMapped={false}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.06, 1.11]}>
-        <boxGeometry args={[0.36, 0.025, 0.03]} />
-        <meshStandardMaterial
-          color="#FFC107"
-          emissive="#FFB900"
-          emissiveIntensity={2.2}
-          toneMapped={false}
-        />
-      </mesh>
-
-      <pointLight
-        ref={light}
-        position={[0, 0.6, 0]}
-        color="#FFD54F"
-        intensity={6}
-        distance={4.2}
-        decay={2}
-      />
 
       <group ref={model}>
         <LabModel id={lab.id} />
       </group>
 
-      <ExplodedBits exploded={exploded} />
-
-      <StationLabel
-        position={[0, 0.62, 1.35]}
-        meta={`LAB ${lab.number}`}
-        title={lab.name}
-        subtitle={lab.tagline}
-        footer={
-          selected ? "Focus active" : hovered ? "Click to focus" : "Interactive lab"
-        }
-        active={selected || hovered}
+      <StationPill
+        lab={lab}
+        selected={selected}
+        hovered={hovered}
+        onHover={setHovered}
+        onSelect={() => onSelect(lab.id)}
       />
     </group>
   );
@@ -515,65 +512,76 @@ function Scene({
   quality: SceneQuality;
 }) {
   const settings = QUALITY_SETTINGS[quality];
+  const size = useThree((state) => state.size);
+  const fitDistance = getFitDistance(size, exploded);
+
   return (
     <>
-      <color attach="background" args={["#f3f3ee"]} />
-      <fog attach="fog" args={["#f3f3ee", 26, 46]} />
+      <color attach="background" args={["#f7f6f1"]} />
+      <fog
+        attach="fog"
+        args={["#f7f6f1", fitDistance * 1.15, fitDistance * 2.4]}
+      />
 
-      <ambientLight intensity={0.7} />
-      <hemisphereLight args={["#ffffff", "#d7d3c6", 1.05]} />
+      <hemisphereLight args={["#ffffff", "#e8e1d2", 0.95]} />
       <directionalLight
-        position={[8, 13, 7]}
-        intensity={2.4}
+        position={[8, 12, 8]}
+        intensity={2.2}
+        color="#fff3d6"
         castShadow={settings.shadows}
         shadow-mapSize={[settings.shadowMap, settings.shadowMap]}
-        shadow-camera-left={-14}
-        shadow-camera-right={14}
-        shadow-camera-top={14}
-        shadow-camera-bottom={-14}
+        shadow-camera-left={-16}
+        shadow-camera-right={16}
+        shadow-camera-top={16}
+        shadow-camera-bottom={-16}
         shadow-camera-near={0.5}
-        shadow-camera-far={40}
-        shadow-bias={-0.0004}
+        shadow-camera-far={45}
+        shadow-bias={-0.0003}
+        shadow-radius={4}
       />
-      <directionalLight position={[-7, 7, -6]} intensity={0.75} color="#FFD54F" />
-      <pointLight position={[0, 5.5, 1]} intensity={42} distance={18} color="#FFD54F" decay={2} />
+      <directionalLight
+        position={[-8, 6, -6]}
+        intensity={0.55}
+        color="#dfe8ff"
+      />
 
       <Ground quality={quality} />
       <Pathways exploded={exploded} />
+      <ContactShadows
+        position={[0, 0.008, 0]}
+        opacity={0.28}
+        scale={18}
+        blur={2.6}
+        far={4}
+        resolution={quality === "low" ? 128 : 256}
+        frames={1}
+      />
 
-      {labs.map((lab, index) => (
-        <LabStation
-          key={lab.id}
-          lab={lab}
-          index={index}
-          selected={selectedId === lab.id}
-          exploded={exploded}
-          onSelect={onSelect}
-          reduceMotion={reduceMotion}
-        />
-      ))}
-
-      {quality !== "low" && (
-        <Sparkles
-          count={settings.sparkles}
-          scale={[18, 5, 18]}
-          size={1.7}
-          speed={0.25}
-          color="#FFC107"
-          opacity={0.55}
-          position={[0, 2, 0]}
-        />
-      )}
+      {LAB_STATIONS.map((station) => {
+        const lab = labs.find((item) => item.id === station.id);
+        if (!lab) return null;
+        return (
+          <LabStation
+            key={station.id}
+            lab={lab}
+            station={station}
+            selected={selectedId === station.id}
+            exploded={exploded}
+            onSelect={onSelect}
+            reduceMotion={reduceMotion}
+          />
+        );
+      })}
 
       <OrbitControls
         makeDefault
         enableDamping
         dampingFactor={0.06}
         enablePan={false}
-        minDistance={4.5}
-        maxDistance={30}
-        minPolarAngle={0.3}
-        maxPolarAngle={1.44}
+        minDistance={selectedId ? 5 : fitDistance * 0.45}
+        maxDistance={fitDistance * 1.6}
+        minPolarAngle={0.55}
+        maxPolarAngle={1.2}
         autoRotate={autoRotate && !selectedId && !reduceMotion}
         autoRotateSpeed={0.55}
         touches={{
@@ -587,7 +595,9 @@ function Scene({
         zoom={zoom}
         resetSignal={resetSignal}
         reduceMotion={reduceMotion}
+        fitDistance={fitDistance}
       />
+      <SceneCleanup />
     </>
   );
 }
@@ -618,10 +628,10 @@ export default function CampusCanvas({
     <div ref={containerRef} className="!absolute inset-0">
       <Canvas
         dpr={settings.dpr}
-        shadows={settings.shadows ? { type: THREE.PCFShadowMap } : false}
+        shadows={settings.shadows ? { type: THREE.PCFSoftShadowMap } : false}
         frameloop={active ? "always" : "demand"}
         performance={{ min: 0.4 }}
-        camera={{ position: [12, 10, 15], fov: 38, near: 0.1, far: 100 }}
+        camera={{ position: [18, 14, 22], fov: CAMERA_FOV, near: 0.1, far: 120 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         onPointerMissed={() => onSelect(null)}
         className="!absolute inset-0"
