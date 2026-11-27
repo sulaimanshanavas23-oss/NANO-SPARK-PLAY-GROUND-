@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  MoreHorizontal,
   Play,
   Search,
   Sparkles,
@@ -40,7 +39,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [hasUnread, setHasUnread] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -60,7 +58,6 @@ export function Navbar() {
       }
       if (event.key === "Escape") {
         setPanel(null);
-        setMoreOpen(false);
         setMobileOpen(false);
       }
     };
@@ -70,7 +67,6 @@ export function Navbar() {
 
   useEffect(() => {
     setMobileOpen(false);
-    setMoreOpen(false);
     setPanel(null);
   }, [pathname]);
 
@@ -85,9 +81,6 @@ export function Navbar() {
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
-
-  const primaryNav = navigation.slice(0, 6);
-  const moreNav = navigation.slice(6);
 
   const initials = useMemo(() => {
     if (!profile) return "NS";
@@ -140,77 +133,10 @@ export function Navbar() {
           scrolled && "shadow-nav",
         )}
       >
-        <div className="container-wide flex h-[84px] items-center justify-between gap-4 xl:h-[96px]">
+        <div className="container-wide flex h-[84px] items-center justify-between gap-4 lg:h-[92px] xl:h-[100px]">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="shrink-0" />
           </div>
-
-          <nav
-            aria-label="Primary"
-            className="hidden items-center gap-4 xl:flex 2xl:gap-6"
-          >
-            {primaryNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                data-active={isActive(item.href)}
-                className={cn(
-                  "link-underline whitespace-nowrap py-2 text-[12.5px] font-medium transition-colors 2xl:text-[13px]",
-                  isActive(item.href)
-                    ? "text-ink"
-                    : "text-ink-muted hover:text-ink",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMoreOpen((value) => !value)}
-                className={cn(
-                  "flex items-center gap-1 whitespace-nowrap py-2 text-[12.5px] font-medium transition-colors 2xl:text-[13px]",
-                  moreOpen || moreNav.some((item) => isActive(item.href))
-                    ? "text-ink"
-                    : "text-ink-muted hover:text-ink",
-                )}
-                aria-expanded={moreOpen}
-                aria-haspopup="menu"
-              >
-                More <MoreHorizontal className="h-4 w-4" />
-              </button>
-              <AnimatePresence>
-                {moreOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                    transition={{ duration: 0.16 }}
-                    role="menu"
-                    className="absolute right-0 top-11 w-56 overflow-hidden rounded-2xl border border-ink/10 bg-white p-1.5 shadow-card"
-                  >
-                    {moreNav.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        role="menuitem"
-                        onClick={() => setMoreOpen(false)}
-                        className={cn(
-                          "flex items-center justify-between rounded-xl px-3 py-2.5 text-[12.5px] font-medium transition-colors",
-                          isActive(item.href)
-                            ? "bg-spark-yellow/15 text-ink"
-                            : "text-ink-muted hover:bg-warm hover:text-ink",
-                        )}
-                      >
-                        {item.label}
-                        <ArrowRight className="h-3.5 w-3.5 opacity-40" />
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
@@ -370,6 +296,41 @@ export function Navbar() {
               <Menu className="h-5 w-5" />
             </button>
           </div>
+        </div>
+
+        <div className="hidden border-t border-ink/[0.07] bg-white/95 xl:block">
+          <nav
+            aria-label="Primary"
+            className="container-wide flex flex-wrap items-center justify-center gap-x-5 gap-y-0.5 py-1.5 2xl:gap-x-7"
+          >
+            {navigation.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "group relative whitespace-nowrap rounded-md px-1.5 py-2.5 text-[14px] font-semibold transition-colors duration-200 2xl:text-[15px]",
+                    active
+                      ? "text-ink"
+                      : "text-ink/80 hover:text-ink",
+                  )}
+                >
+                  {item.label}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute inset-x-1 -bottom-[1px] h-[2.5px] origin-left rounded-full bg-spark-yellow transition-transform duration-300",
+                      active
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100",
+                    )}
+                  />
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         {panel && (

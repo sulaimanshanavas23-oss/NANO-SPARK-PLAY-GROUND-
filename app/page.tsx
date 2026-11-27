@@ -10,19 +10,17 @@ import {
   Lightbulb,
   PackageOpen,
   Play,
-  Sparkles,
   Wrench,
 } from "lucide-react";
 import { Hero } from "@/components/hero/hero";
 import { Marquee } from "@/components/shared/marquee";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Reveal } from "@/components/shared/reveal";
-import { LabCard } from "@/components/laboratories/lab-card";
+import { SevenLabsSection } from "@/components/laboratories/seven-labs-section";
 import { LearningPathway } from "@/components/learning-journey/learning-pathway";
 import { buttonClass } from "@/components/shared/button";
 import { CategoryGlyph } from "@/components/shared/icons";
 import { assets } from "@/src/lib/assets";
-import { labs } from "@/src/lib/labs";
 import { projectIdeas, stats } from "@/src/lib/site";
 import { toolCategories, tools } from "@/src/lib/tools";
 import { cn } from "@/src/lib/utils";
@@ -74,69 +72,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section-pad">
-        <div className="container-wide">
-          <SectionHeading
-            eyebrow="Seven interactive labs"
-            title={
-              <>
-                Seven labs. One connected{" "}
-                <span className="text-spark-dark">campus.</span>
-              </>
-            }
-            description="Each laboratory is a working station on the 3D campus with its own real application. Start anywhere — every lab is live, linked and built for hands-on learning."
-            action={
-              <Link href="/explore" className={buttonClass("outline")}>
-                Explore all labs <ArrowRight className="h-4 w-4" />
-              </Link>
-            }
-          />
-
-          <Reveal className="mt-8 block">
-            <div className="overflow-hidden rounded-[24px] border border-ink/10 bg-warm shadow-card sm:rounded-[28px]">
-              <Image
-                src={assets.images.sevenLabsCampus}
-                alt="The seven Nano Spark interactive labs connected on the 3D campus"
-                width={1536}
-                height={1024}
-                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
-                className="block h-auto w-full object-contain"
-              />
-            </div>
-          </Reveal>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            {labs.map((lab, index) => (
-              <Reveal key={lab.id} delay={(index % 3) * 0.06}>
-                <LabCard lab={lab} />
-              </Reveal>
-            ))}
-            <Reveal delay={0.12}>
-              <div className="relative flex h-full min-h-[280px] flex-col justify-between overflow-hidden rounded-3xl bg-ink p-6 text-white">
-                <div className="pointer-events-none absolute inset-0 dark-circuit opacity-90" />
-                <div className="relative">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-spark-yellow text-ink">
-                    <Sparkles className="h-5 w-5" />
-                  </span>
-                  <h3 className="mt-5 font-display text-2xl font-semibold leading-tight">
-                    Not sure where to begin?
-                  </h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-white/55">
-                    Start at the campus, inspect each station and follow the
-                    tool that catches your curiosity.
-                  </p>
-                </div>
-                <Link
-                  href="/playground"
-                  className={cn(buttonClass("primary", "sm"), "relative mt-6 w-fit")}
-                >
-                  <Play className="h-3.5 w-3.5 fill-current" /> Enter playground
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      <SevenLabsSection />
 
       <section className="bg-warm section-pad">
         <div className="container-wide">

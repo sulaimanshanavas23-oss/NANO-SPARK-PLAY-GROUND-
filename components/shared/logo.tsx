@@ -8,11 +8,13 @@ export function Logo({
   compact = false,
   tone = "light",
   className,
+  size = "lg",
 }: {
   href?: string;
   compact?: boolean;
   tone?: "light" | "dark";
   className?: string;
+  size?: "sm" | "md" | "lg";
 }) {
   if (compact) {
     return (
@@ -21,12 +23,12 @@ export function Logo({
         aria-label="Nano Spark home"
         className={cn("group flex items-center", className)}
       >
-        <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-ink/10 sm:h-11 sm:w-11">
+        <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-ink/10 sm:h-14 sm:w-14">
           <Image
             src={assets.branding.mark}
             alt="Nano Spark logo"
             fill
-            sizes="44px"
+            sizes="56px"
             className="object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
           />
         </span>
@@ -53,8 +55,13 @@ export function Logo({
           width={622}
           height={137}
           priority
-          sizes="(max-width: 640px) 240px, 360px"
-          className="h-12 w-auto sm:h-16 lg:h-[72px]"
+          sizes="(max-width: 640px) 250px, 400px"
+          className={cn(
+            "w-auto",
+            size === "lg"
+              ? "h-12 sm:h-[68px] lg:h-[80px] xl:h-[84px]"
+              : "h-11 sm:h-14 lg:h-[60px]",
+          )}
         />
       </span>
     </Link>

@@ -17,6 +17,7 @@ export const assets = {
     students: "/images/students.jpeg",
     labsCampus: "/images/labs-campus.png",
     sevenLabsCampus: "/images/seven-labs-campus.png",
+    campusHero: "/images/campus-hero.jpg",
   },
 } as const;
 

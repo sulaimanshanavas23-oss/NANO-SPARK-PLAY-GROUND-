@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Boxes, Info, Star } from "lucide-react";
+import { Info, Star } from "lucide-react";
 import * as THREE from "three";
 import { LabModel } from "@/components/campus/lab-models";
 import { ModelHoverController } from "@/components/laboratories/model-hover-controller";
@@ -272,8 +272,8 @@ export function Lab3DPreview({
       </span>
 
       {showHint && (
-        <span className="pointer-events-none absolute bottom-2.5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur">
-          {onExpand ? "Click to inspect in 3D" : "Live 3D model"}
+        <span className="pointer-events-none absolute bottom-2.5 left-2.5 z-30 hidden whitespace-nowrap rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur sm:inline-flex">
+          {onExpand ? "Click to inspect" : "Live 3D model"}
         </span>
       )}
 
@@ -287,14 +287,8 @@ export function Lab3DPreview({
       )}
 
       {renderScene && hovered && onExpand && (
-        <span className="pointer-events-none absolute right-2.5 top-2.5 z-30 hidden items-center gap-1 rounded-full bg-ink/85 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-spark-light backdrop-blur sm:inline-flex">
+        <span className="pointer-events-none absolute right-2.5 top-2.5 z-30 hidden items-center gap-1 rounded-full bg-ink/85 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-spark-light backdrop-blur lg:inline-flex">
           <Info className="h-3 w-3" /> 360° view
-        </span>
-      )}
-
-      {renderScene && (
-        <span className="pointer-events-none absolute right-2.5 bottom-2.5 z-30 hidden items-center gap-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-ink-muted/70 sm:inline-flex">
-          <Boxes className="h-3 w-3" /> {config.hotspots.length} parts
         </span>
       )}
     </div>

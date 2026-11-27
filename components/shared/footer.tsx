@@ -12,7 +12,7 @@ export function Footer() {
       <div className="container-wide relative py-14 lg:py-20">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_0.7fr_0.9fr] lg:gap-12">
           <div>
-            <Logo tone="dark" />
+            <Logo tone="dark" size="md" />
             <p className="mt-6 max-w-sm text-pretty text-sm leading-relaxed text-white/55">
               The interactive learning campus from Nano Spark. Seven labs, real
               tools and a generation of students turning small ideas into big

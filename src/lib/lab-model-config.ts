@@ -20,8 +20,8 @@ export type LabModelConfig = {
 };
 
 const cameraPreview: LabModelConfig["previewCamera"] = {
-  position: [2.45, 1.85, 2.95],
-  fov: 34,
+  position: [3.3, 2.35, 3.8],
+  fov: 33,
 };
 
 const cameraViewer: LabModelConfig["viewerCamera"] = {
