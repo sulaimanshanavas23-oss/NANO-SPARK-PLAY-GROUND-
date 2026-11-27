@@ -49,18 +49,17 @@ export function Logo({
             "rounded-xl bg-white px-2 py-1.5 ring-1 ring-white/20",
         )}
       >
-        <Image
-          src={assets.branding.wordmarkWide}
-          alt="Nano Spark — Technology, Innovations, Solutions"
-          width={622}
-          height={137}
-          priority
-          sizes="(max-width: 640px) 250px, 400px"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/nano-spark-logo-wide.png"
+          alt="Nano Spark - Technology · Innovations · Solutions"
+          loading="eager"
+          decoding="async"
           className={cn(
-            "w-auto",
+            "w-auto max-w-full object-contain",
             size === "lg"
-              ? "h-12 sm:h-[68px] lg:h-[80px] xl:h-[84px]"
-              : "h-11 sm:h-14 lg:h-[60px]",
+              ? "h-10 sm:h-12 lg:h-14"
+              : "h-10 sm:h-12",
           )}
         />
       </span>
