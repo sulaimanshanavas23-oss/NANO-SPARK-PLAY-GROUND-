@@ -16,7 +16,6 @@ import { Hero } from "@/components/hero/hero";
 import { Marquee } from "@/components/shared/marquee";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Reveal } from "@/components/shared/reveal";
-import { SevenLabsSection } from "@/components/laboratories/seven-labs-section";
 import { HardwareShowcase } from "@/components/showcase/hardware-showcase";
 import { LearningPathway } from "@/components/learning-journey/learning-pathway";
 import { buttonClass } from "@/components/shared/button";
@@ -72,8 +71,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      <SevenLabsSection />
 
       <section className="bg-warm section-pad">
         <div className="container-wide">

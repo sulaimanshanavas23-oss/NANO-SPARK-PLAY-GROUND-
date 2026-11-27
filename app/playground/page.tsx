@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, GraduationCap, Layers, Loader2, Play, ShieldCheck } from "lucide-react";
 import { PlaygroundWorkspace } from "@/components/workspace/playground-workspace";
+import { SevenLabsSection } from "@/components/laboratories/seven-labs-section";
 import { buttonClass } from "@/components/shared/button";
 import { labs } from "@/src/lib/labs";
 
@@ -94,6 +95,8 @@ export default function PlaygroundPage() {
           <PlaygroundWorkspace />
         </Suspense>
       </section>
+
+      <SevenLabsSection />
 
       <section className="bg-warm pb-16">
         <div className="container-wide">

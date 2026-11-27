@@ -35,6 +35,8 @@ const config: Config = {
       boxShadow: {
         glow: "0 0 40px rgba(255,193,7,0.35)",
         "glow-sm": "0 0 18px rgba(255,193,7,0.28)",
+        soft: "0 4px 20px rgba(17,17,17,0.08)",
+        lift: "0 12px 32px rgba(17,17,17,0.16)",
         card: "0 18px 60px -20px rgba(17,17,17,0.22)",
         nav: "0 10px 40px -18px rgba(17,17,17,0.18)",
       },

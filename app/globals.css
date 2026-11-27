@@ -621,3 +621,43 @@ body {
 .campus-stage:fullscreen .campus-stage-inner {
   border-radius: 0;
 }
+
+/* ------------------------------------------------------------------ */
+/* Feedback page — marquee + animated circuit traces                  */
+/* ------------------------------------------------------------------ */
+@keyframes ns-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ns-marquee-track {
+  animation: ns-marquee 38s linear infinite;
+}
+
+.ns-marquee:hover .ns-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes ns-trace {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.ns-trace {
+  stroke-dasharray: 6 16;
+  animation: ns-trace 20s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ns-marquee-track {
+    animation: none !important;
+  }
+  .ns-trace {
+    animation: none !important;
+  }
+}
