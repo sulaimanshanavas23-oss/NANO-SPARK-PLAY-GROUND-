@@ -9,14 +9,17 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Canvas, useThree } from "@react-three/fiber";
 import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import * as THREE from "three";
 import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
   Info,
+  Layers,
   Loader2,
   Move3D,
   Play,
@@ -27,24 +30,86 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { LabModel } from "@/components/campus/lab-models";
-import { ComponentHotspot } from "@/components/laboratories/component-hotspot";
 import { LabGlyph } from "@/components/shared/icons";
-import { getLabModelConfig } from "@/src/lib/lab-model-config";
+import {
+  getLabComponents,
+  type LabComponentConfig,
+  type LabHotspot,
+} from "@/src/data/labComponents";
+import { protocols } from "@/src/data/protocols";
 import { useDeviceQuality } from "@/src/lib/use-device-quality";
 import { useApp } from "@/src/lib/store/app-provider";
 import type { Lab } from "@/src/lib/labs";
 import { cn } from "@/src/lib/utils";
+import { HotspotMarker } from "@/src/components/labs/hotspot-marker";
+import { ComponentInfoPanel } from "@/src/components/labs/component-info-panel";
+import { ComponentLegend } from "@/src/components/labs/component-legend";
+import { ProtocolExplorerPanel } from "@/src/components/labs/protocol-explorer-panel";
+import { ElectronicsToolsPanel } from "@/src/components/labs/electronics-tools-panel";
+import { BoardComparisonPanel } from "@/src/components/labs/board-comparison-panel";
+import { useHotspotFocus } from "@/src/components/labs/use-hotspot-focus";
+
+function SceneCleanup() {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    return () => {
+      scene.traverse((object) => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.geometry?.dispose();
+        const materials = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+        materials.forEach((material) => material?.dispose());
+      });
+      gl.dispose();
+    };
+  }, [gl, scene]);
+
+  return null;
+}
+
+function CameraFocusController({
+  target,
+  requestKey,
+  controls,
+  reducedMotion,
+}: {
+  target: [number, number, number] | null;
+  requestKey: number;
+  controls: React.RefObject<ElementRef<typeof OrbitControls> | null>;
+  reducedMotion: boolean;
+}) {
+  const { focus, cancel } = useHotspotFocus(
+    controls as React.RefObject<OrbitControlsImpl | null>,
+    reducedMotion,
+  );
+
+  useEffect(() => {
+    if (target) {
+      focus(target);
+    } else {
+      cancel();
+    }
+  }, [cancel, focus, requestKey, target]);
+
+  return null;
+}
 
 function ViewerScene({
   lab,
+  config,
   activeHotspot,
   onHotspot,
+  explode,
 }: {
   lab: Lab;
+  config: LabComponentConfig;
   activeHotspot: string | null;
-  onHotspot: (id: string) => void;
+  onHotspot: (hotspot: LabHotspot) => void;
+  explode: number;
 }) {
-  const config = getLabModelConfig(lab.id);
   return (
     <>
       <ambientLight intensity={0.85} />
@@ -67,16 +132,16 @@ function ViewerScene({
       />
 
       <group position={[0, -0.22, 0]}>
-        <LabModel id={lab.id}>
-          {config.hotspots.map((hotspot) => (
-            <ComponentHotspot
-              key={hotspot.id}
-              label={hotspot.label}
-              position={hotspot.position}
-              active={activeHotspot === hotspot.id}
-              onSelect={() => onHotspot(hotspot.id)}
-            />
-          ))}
+        <LabModel id={lab.id} explode={explode}>
+          {config.kind !== "protocol" &&
+            config.hotspots.map((hotspot) => (
+              <HotspotMarker
+                key={hotspot.id}
+                hotspot={hotspot}
+                active={activeHotspot === hotspot.id}
+                onSelect={() => onHotspot(hotspot)}
+              />
+            ))}
         </LabModel>
       </group>
 
@@ -118,8 +183,9 @@ export function LabModelViewer({
   open: boolean;
   onClose: () => void;
 }) {
-  const config = getLabModelConfig(lab.id);
+  const config = getLabComponents(lab.id);
   const quality = useDeviceQuality();
+  const reducedMotion = useReducedMotion() ?? false;
   const controls = useRef<ElementRef<typeof OrbitControls>>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const { isFavorite, toggleFavorite } = useApp();
@@ -127,18 +193,72 @@ export function LabModelViewer({
   const [mounted, setMounted] = useState(false);
   const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState(true);
+  const [explode, setExplode] = useState(0);
+  const [focusTarget, setFocusTarget] = useState<
+    [number, number, number] | null
+  >(null);
+  const [focusKey, setFocusKey] = useState(0);
+  const [mobilePanel, setMobilePanel] = useState<"legend" | "info" | null>(null);
+  const [sidebarTab, setSidebarTab] = useState<"components" | "boards">(
+    "components",
+  );
+  const [isDesktop, setIsDesktop] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches,
+  );
+  const panelStateRef = useRef({ activeHotspot, mobilePanel });
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    panelStateRef.current = { activeHotspot, mobilePanel };
+  }, [activeHotspot, mobilePanel]);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (isDesktop) setMobilePanel(null);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!open) return;
     setActiveHotspot(null);
     setAutoRotate(true);
+    setExplode(0);
+    setFocusTarget(null);
+    setMobilePanel(null);
+    setSidebarTab("components");
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      const state = panelStateRef.current;
+      if (state.activeHotspot) {
+        setActiveHotspot(null);
+        setFocusTarget(null);
+        setMobilePanel(null);
+        return;
+      }
+      if (state.mobilePanel) {
+        setMobilePanel(null);
+        return;
+      }
+      onCloseRef.current();
     };
+
     window.addEventListener("keydown", onKey);
     const timer = window.setTimeout(() => closeRef.current?.focus(), 60);
     return () => {
@@ -146,9 +266,95 @@ export function LabModelViewer({
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(timer);
     };
-  }, [open, onClose]);
+  }, [open]);
 
-  const hotspot = config.hotspots.find((item) => item.id === activeHotspot);
+  const selectedHotspot =
+    config.hotspots.find((item) => item.id === activeHotspot) ?? null;
+
+  const focusHotspot = (hotspot: LabHotspot) => {
+    setActiveHotspot(hotspot.id);
+    setFocusTarget(hotspot.cameraTarget);
+    setFocusKey((value) => value + 1);
+    if (!isDesktop) setMobilePanel("info");
+  };
+
+  const closePanel = () => {
+    setActiveHotspot(null);
+    setFocusTarget(null);
+    setMobilePanel(null);
+  };
+
+  const resetView = () => {
+    closePanel();
+    setExplode(0);
+    controls.current?.reset();
+  };
+
+  const componentCount =
+    config.kind === "protocol"
+      ? `${protocols.length} protocols`
+      : `${config.hotspots.length} components`;
+
+  const panelLabel =
+    config.kind === "protocol"
+      ? "Protocol explorer"
+      : config.kind === "robotics" && sidebarTab === "boards"
+        ? "Board comparison"
+        : selectedHotspot
+          ? "Component details"
+          : "Components";
+
+  const renderPanel = () => {
+    if (config.kind === "protocol") {
+      return <ProtocolExplorerPanel />;
+    }
+
+    return (
+      <div className="flex h-full flex-col">
+        {config.kind === "robotics" && (
+          <div className="flex gap-1 border-b border-white/10 p-2">
+            {(["components", "boards"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setSidebarTab(tab)}
+                className={cn(
+                  "flex-1 rounded-full border px-2 py-1.5 text-[9px] font-semibold uppercase tracking-[0.06em] transition-colors",
+                  sidebarTab === tab
+                    ? "border-spark-yellow/45 bg-spark-yellow/12 text-spark-yellow"
+                    : "border-white/10 text-white/40 hover:border-white/20 hover:text-white/65",
+                )}
+                aria-pressed={sidebarTab === tab}
+              >
+                {tab === "components" ? "Components" : "Compare boards"}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {config.kind === "robotics" && sidebarTab === "boards" ? (
+          <BoardComparisonPanel />
+        ) : selectedHotspot ? (
+          <ComponentInfoPanel
+            hotspot={selectedHotspot}
+            onClose={closePanel}
+            onFocus={() => focusHotspot(selectedHotspot)}
+          />
+        ) : (
+          <div className="flex h-full flex-col">
+            <div className="min-h-0 flex-1">
+              <ComponentLegend
+                hotspots={config.hotspots}
+                activeId={activeHotspot}
+                onSelect={focusHotspot}
+              />
+            </div>
+            {config.kind === "electronics" && <ElectronicsToolsPanel />}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (!mounted) return null;
 
@@ -165,7 +371,7 @@ export function LabModelViewer({
           }}
           role="dialog"
           aria-modal="true"
-          aria-label={`${lab.name} interactive 3D viewer`}
+          aria-label={`${config.title} interactive 3D component explorer`}
         >
           <motion.div
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
@@ -181,16 +387,16 @@ export function LabModelViewer({
                 </span>
                 <div className="min-w-0">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.28em] text-spark-yellow">
-                    Lab {lab.number}
+                    Lab {config.labNumber}
                   </p>
                   <h2 className="truncate font-display text-lg font-bold text-white sm:text-2xl">
-                    {lab.name}
+                    {config.title}
                   </h2>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                 <span className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/60 lg:inline-flex">
-                  <Boxes className="h-3 w-3" /> {config.hotspots.length} components
+                  <Boxes className="h-3 w-3" /> {componentCount}
                 </span>
                 <button
                   type="button"
@@ -211,7 +417,7 @@ export function LabModelViewer({
                 </button>
                 <button
                   type="button"
-                  onClick={() => controls.current?.reset()}
+                  onClick={resetView}
                   className="hidden h-9 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[10px] font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
                 >
                   <RotateCcw className="h-3.5 w-3.5" /> Reset
@@ -227,127 +433,188 @@ export function LabModelViewer({
               </div>
             </div>
 
-            <div className="relative flex-1 overflow-hidden bg-[#1b1a16]">
-              <div className="pointer-events-none absolute inset-0 dot-grid opacity-[0.06]" />
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 blur-3xl"
-                style={{
-                  background: `radial-gradient(circle, ${config.accent}33, transparent 70%)`,
-                }}
-              />
-              <Canvas
-                shadows
-                dpr={quality === "low" ? [1, 1.25] : [1, 1.75]}
-                camera={{
-                  position: config.viewerCamera.position,
-                  fov: config.viewerCamera.fov,
-                }}
-                gl={{
-                  antialias: true,
-                  alpha: true,
-                  powerPreference: "high-performance",
-                }}
-                className="!absolute inset-0"
-              >
-                <Suspense
-                  fallback={
-                    <Html center>
-                      <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-ink-muted shadow">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Loading model…
-                      </div>
-                    </Html>
-                  }
-                >
-                  <ViewerScene
-                    lab={lab}
-                    activeHotspot={activeHotspot}
-                    onHotspot={(id) =>
-                      setActiveHotspot((current) =>
-                        current === id ? null : id,
-                      )
-                    }
-                  />
-                </Suspense>
-                <OrbitControls
-                  ref={controls}
-                  makeDefault
-                  enableDamping
-                  dampingFactor={0.08}
-                  enablePan
-                  enableZoom
-                  autoRotate={autoRotate}
-                  autoRotateSpeed={1.4}
-                  minDistance={2.2}
-                  maxDistance={9}
-                  minPolarAngle={0.35}
-                  maxPolarAngle={1.52}
+            <div className="relative flex min-h-0 flex-1 overflow-hidden">
+              <div className="relative min-w-0 flex-1 overflow-hidden bg-[#1b1a16]">
+                <div className="pointer-events-none absolute inset-0 dot-grid opacity-[0.06]" />
+                <div
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 blur-3xl"
+                  style={{
+                    background: `radial-gradient(circle, ${lab.accent}33, transparent 70%)`,
+                  }}
                 />
-              </Canvas>
-
-              <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
-                {[
-                  { icon: Move3D, label: "Drag to rotate" },
-                  { icon: ZoomIn, label: "Scroll to zoom" },
-                  { icon: Move3D, label: "Right-drag to pan" },
-                ].map((hint) => (
-                  <span
-                    key={hint.label}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/40 px-2.5 py-1 text-[9px] font-medium text-white/60 shadow-sm backdrop-blur"
+                <Canvas
+                  shadows
+                  dpr={quality === "low" ? [1, 1.25] : [1, 1.75]}
+                  camera={{
+                    position: config.cameraStart,
+                    fov: config.cameraFov,
+                  }}
+                  gl={{
+                    antialias: true,
+                    alpha: true,
+                    powerPreference: "high-performance",
+                  }}
+                  className="!absolute inset-0"
+                >
+                  <Suspense
+                    fallback={
+                      <Html center>
+                        <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-ink-muted shadow">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Loading model…
+                        </div>
+                      </Html>
+                    }
                   >
-                    <hint.icon className="h-3 w-3" />
-                    {hint.label}
-                  </span>
-                ))}
-              </div>
+                    <ViewerScene
+                      lab={lab}
+                      config={config}
+                      activeHotspot={activeHotspot}
+                      onHotspot={focusHotspot}
+                      explode={explode}
+                    />
+                  </Suspense>
+                  <OrbitControls
+                    ref={controls}
+                    makeDefault
+                    enableDamping
+                    dampingFactor={0.08}
+                    enablePan
+                    enableZoom
+                    autoRotate={autoRotate && !selectedHotspot}
+                    autoRotateSpeed={1.4}
+                    minDistance={2.2}
+                    maxDistance={9}
+                    minPolarAngle={0.35}
+                    maxPolarAngle={1.52}
+                  />
+                  <CameraFocusController
+                    target={focusTarget}
+                    requestKey={focusKey}
+                    controls={controls}
+                    reducedMotion={reducedMotion}
+                  />
+                  <SceneCleanup />
+                </Canvas>
 
-              <button
-                type="button"
-                onClick={() => controls.current?.reset()}
-                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[10px] font-semibold text-white/70 shadow-sm backdrop-blur transition-colors hover:bg-white/10 hover:text-white sm:hidden"
-              >
-                <RotateCcw className="h-3.5 w-3.5" /> Reset
-              </button>
+                <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
+                  {[
+                    { icon: Move3D, label: "Drag to rotate" },
+                    { icon: ZoomIn, label: "Scroll to zoom" },
+                    { icon: Move3D, label: "Right-drag to pan" },
+                  ].map((hint) => (
+                    <span
+                      key={hint.label}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/40 px-2.5 py-1 text-[9px] font-medium text-white/60 shadow-sm backdrop-blur"
+                    >
+                      <hint.icon className="h-3 w-3" />
+                      {hint.label}
+                    </span>
+                  ))}
+                </div>
 
-              <AnimatePresence mode="wait">
-                {hotspot ? (
-                  <motion.div
-                    key={hotspot.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute inset-x-3 bottom-3 z-10 max-w-sm rounded-2xl border border-white/12 bg-[#1f1f1f]/95 p-4 shadow-2xl backdrop-blur sm:inset-x-auto sm:bottom-4 sm:left-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-spark-yellow">
-                        Component
-                      </p>
-                      <button
-                        onClick={() => setActiveHotspot(null)}
-                        className="rounded-full p-0.5 text-white/50 transition-colors hover:text-white"
-                        aria-label="Close component details"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                <button
+                  type="button"
+                  onClick={resetView}
+                  className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[10px] font-semibold text-white/70 shadow-sm backdrop-blur transition-colors hover:bg-white/10 hover:text-white sm:hidden"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Reset
+                </button>
+
+                {config.kind === "vehicle" && (
+                  <div className="absolute right-3 top-14 z-10 w-44 rounded-2xl border border-white/12 bg-black/55 p-2.5 shadow-xl backdrop-blur sm:top-3 sm:right-3 sm:w-52">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                        Explode view
+                      </span>
+                      <span className="text-[9px] font-semibold text-spark-yellow">
+                        {Math.round(explode * 100)}%
+                      </span>
                     </div>
-                    <p className="mt-1 font-display text-sm font-semibold text-white">
-                      {hotspot.label}
-                    </p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-                      {hotspot.detail}
-                    </p>
-                  </motion.div>
-                ) : (
-                  <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex items-center gap-2 rounded-full border border-white/12 bg-[#1f1f1f]/90 px-3 py-1.5 text-[9.5px] text-white/55 shadow-sm backdrop-blur sm:inset-x-auto sm:bottom-4 sm:left-4">
-                    <Info className="h-3.5 w-3.5 text-spark-yellow" />
-                    Click a marker to inspect a component
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={explode}
+                      onChange={(event) => setExplode(Number(event.target.value))}
+                      className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-[#FFC107]"
+                      aria-label="Explode vehicle view"
+                    />
                   </div>
                 )}
-              </AnimatePresence>
 
-              <div className="pointer-events-none absolute bottom-3 right-3 z-10 hidden rounded-full border border-white/12 bg-[#1f1f1f]/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white/50 backdrop-blur sm:block">
-                {lab.tagline}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobilePanel(selectedHotspot ? "info" : "legend")
+                  }
+                  className="absolute bottom-3 left-3 z-20 inline-flex h-9 items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-3 text-[10px] font-semibold text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+                >
+                  <Layers className="h-3.5 w-3.5 text-spark-yellow" />
+                  {config.kind === "protocol" ? "Protocols" : "Components"}
+                </button>
+
+                {!selectedHotspot && (
+                  <div className="pointer-events-none absolute bottom-3 left-3 z-10 hidden items-center gap-2 rounded-full border border-white/12 bg-[#1f1f1f]/90 px-3 py-1.5 text-[9.5px] text-white/55 shadow-sm backdrop-blur sm:flex">
+                    <Info className="h-3.5 w-3.5 text-spark-yellow" />
+                    {config.kind === "protocol"
+                      ? "Choose a protocol to trace the data flow"
+                      : "Click a marker to inspect a component"}
+                  </div>
+                )}
+
+                <div className="pointer-events-none absolute bottom-3 right-3 z-10 hidden rounded-full border border-white/12 bg-[#1f1f1f]/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white/50 backdrop-blur sm:block">
+                  {lab.tagline}
+                </div>
               </div>
+
+              {isDesktop && (
+                <aside className="flex w-[340px] shrink-0 flex-col border-l border-white/10 bg-[#171717]">
+                  {renderPanel()}
+                </aside>
+              )}
+
+              <AnimatePresence>
+                {!isDesktop && mobilePanel && (
+                  <>
+                    <motion.div
+                      className="absolute inset-0 z-20 bg-black/45 backdrop-blur-[2px]"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setMobilePanel(null)}
+                    />
+                    <motion.div
+                      className="absolute inset-x-0 bottom-0 z-30 flex max-h-[68%] flex-col overflow-hidden rounded-t-3xl border-t border-white/12 bg-[#171717] shadow-2xl"
+                      initial={{ y: "100%" }}
+                      animate={{ y: 0 }}
+                      exit={{ y: "100%" }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      role="dialog"
+                      aria-label={panelLabel}
+                    >
+                      <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20" />
+                      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/45">
+                          {panelLabel}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setMobilePanel(null)}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                          aria-label="Close component panel"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="min-h-0 flex-1 overflow-hidden">
+                        {renderPanel()}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="border-t border-white/10 bg-[#141414] px-4 py-3.5 sm:px-6">
