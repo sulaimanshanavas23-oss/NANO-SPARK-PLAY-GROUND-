@@ -6,6 +6,7 @@ import {
   ContactShadows,
   Grid,
   Html,
+  Line,
   OrbitControls,
   useCursor,
 } from "@react-three/drei";
@@ -265,6 +266,62 @@ function Pathways({ exploded }: { exploded: boolean }) {
   );
 }
 
+function Spokes() {
+  return (
+    <group>
+      {LAB_STATIONS.map((station) => (
+        <Line
+          key={station.id}
+          points={[
+            [0, 0.06, 0],
+            [station.position[0], 0.06, station.position[2]],
+          ]}
+          color="#FFC107"
+          lineWidth={1.4}
+          transparent
+          opacity={0.4}
+        />
+      ))}
+    </group>
+  );
+}
+
+function CentralHub() {
+  return (
+    <group position={[0, 0, 0]}>
+      <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[1.12, 1.26, 0.22, 64]} />
+        <meshStandardMaterial color="#171717" metalness={0.25} roughness={0.45} />
+      </mesh>
+      <mesh position={[0, 0.22, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.02, 1.16, 72]} />
+        <meshStandardMaterial
+          color="#FFC107"
+          emissive="#FFC107"
+          emissiveIntensity={1.6}
+          toneMapped={false}
+        />
+      </mesh>
+      <Html center position={[0, 1.08, 0]} zIndexRange={[40, 20]}>
+        <div className="flex w-[132px] flex-col items-center gap-1.5 rounded-2xl border border-ink/10 bg-white/90 px-3 py-2.5 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/branding/nano-spark-mark.png"
+            alt="Nano Spark"
+            className="h-9 w-9 object-contain"
+          />
+          <p className="font-display text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-ink">
+            Nano Spark
+            <span className="mt-0.5 block text-[8.5px] font-bold tracking-[0.24em] text-spark-dark">
+              Play Ground
+            </span>
+          </p>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
 function clampLabelPosition(
   element: THREE.Object3D,
   camera: THREE.Camera,
@@ -277,8 +334,8 @@ function clampLabelPosition(
   const x = (point.x * 0.5 + 0.5) * size.width;
   const y = (-point.y * 0.5 + 0.5) * size.height;
   const padX = Math.min(92, size.width * 0.18);
-  const padTop = 34;
-  const padBottom = 84;
+  const padTop = 72;
+  const padBottom = 128;
 
   return [
     THREE.MathUtils.clamp(x, padX, size.width - padX),
@@ -303,7 +360,7 @@ function StationPill({
     <Html
       center
       position={[0, 0.12, 1.42]}
-      zIndexRange={[20, 0]}
+      zIndexRange={[35, 10]}
       calculatePosition={clampLabelPosition}
     >
       <button
@@ -363,7 +420,6 @@ function LabStation({
   const group = useRef<THREE.Group>(null);
   const model = useRef<THREE.Group>(null);
   const ring = useRef<THREE.MeshStandardMaterial>(null);
-  const floorRing = useRef<THREE.MeshBasicMaterial>(null);
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
@@ -407,13 +463,6 @@ function LabStation({
         k,
       );
     }
-    if (floorRing.current) {
-      floorRing.current.opacity = THREE.MathUtils.lerp(
-        floorRing.current.opacity,
-        0.12 + highlight * 0.22,
-        k,
-      );
-    }
     if (model.current) {
       const float = reduceMotion
         ? 0
@@ -444,18 +493,6 @@ function LabStation({
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.28, 1.33, 72]} />
-        <meshBasicMaterial
-          ref={floorRing}
-          color="#FFC107"
-          transparent
-          opacity={0.12}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
-
       <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[1.12, 1.2, 0.4, 56]} />
         <meshStandardMaterial color="#222222" metalness={0.12} roughness={0.5} />
@@ -497,6 +534,7 @@ function Scene({
   onSelect,
   exploded,
   autoRotate,
+  rotationSpeed,
   zoom,
   resetSignal,
   reduceMotion,
@@ -506,6 +544,7 @@ function Scene({
   onSelect: (id: string | null) => void;
   exploded: boolean;
   autoRotate: boolean;
+  rotationSpeed: number;
   zoom: number;
   resetSignal: number;
   reduceMotion: boolean;
@@ -547,6 +586,8 @@ function Scene({
 
       <Ground quality={quality} />
       <Pathways exploded={exploded} />
+      <Spokes />
+      <CentralHub />
       <ContactShadows
         position={[0, 0.008, 0]}
         opacity={0.28}
@@ -583,7 +624,7 @@ function Scene({
         minPolarAngle={0.55}
         maxPolarAngle={1.2}
         autoRotate={autoRotate && !selectedId && !reduceMotion}
-        autoRotateSpeed={0.55}
+        autoRotateSpeed={rotationSpeed}
         touches={{
           ONE: THREE.TOUCH.ROTATE,
           TWO: THREE.TOUCH.DOLLY_ROTATE,
@@ -607,6 +648,7 @@ export default function CampusCanvas({
   onSelect,
   exploded = false,
   autoRotate = false,
+  rotationSpeed = 0.55,
   zoom = 0,
   resetSignal = 0,
   reduceMotion = false,
@@ -615,6 +657,7 @@ export default function CampusCanvas({
   onSelect: (id: string | null) => void;
   exploded?: boolean;
   autoRotate?: boolean;
+  rotationSpeed?: number;
   zoom?: number;
   resetSignal?: number;
   reduceMotion?: boolean;
@@ -642,6 +685,7 @@ export default function CampusCanvas({
             onSelect={onSelect}
             exploded={exploded}
             autoRotate={autoRotate}
+            rotationSpeed={rotationSpeed}
             zoom={zoom}
             resetSignal={resetSignal}
             reduceMotion={reduceMotion}

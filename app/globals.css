@@ -309,3 +309,315 @@ body {
     perspective: 800px;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Explore Labs — button system                                        */
+/* ------------------------------------------------------------------ */
+:root {
+  --lab-btn-ink: #0b0b0b;
+  --lab-btn-white: #ffffff;
+  --lab-btn-border: #e5e5e5;
+  --lab-btn-hover-bg: #fffbea;
+  --lab-btn-active-bg: #fff3c4;
+  --lab-btn-primary-from: #ffd54a;
+  --lab-btn-primary-to: #ffc107;
+  --lab-btn-primary-from-bright: #ffe066;
+  --lab-btn-ring: rgba(255, 193, 7, 0.4);
+  --lab-btn-shadow: rgba(255, 193, 7, 0.35);
+  --lab-btn-shadow-hover: rgba(255, 193, 7, 0.55);
+  --lab-btn-shadow-active: rgba(255, 193, 7, 0.4);
+}
+
+.lab-btn-primary {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9999px;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--lab-btn-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  background-image: linear-gradient(
+    180deg,
+    var(--lab-btn-primary-from) 0%,
+    var(--lab-btn-primary-to) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 6px 14px var(--lab-btn-shadow);
+  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lab-btn-primary__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lab-btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 120%;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-btn-primary:hover {
+    transform: translateY(-2px) scale(1.04);
+    background-image: linear-gradient(
+      180deg,
+      var(--lab-btn-primary-from-bright) 0%,
+      var(--lab-btn-primary-to) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 10px 24px var(--lab-btn-shadow-hover);
+  }
+  .lab-btn-primary:hover .lab-btn-primary__icon {
+    transform: translateX(3px);
+  }
+  .lab-btn-primary:hover::after {
+    animation: lab-btn-shine 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .lab-card-group:hover .lab-btn-primary {
+    animation: lab-btn-pulse 1.8s infinite;
+  }
+  .lab-card-group:hover .lab-btn-primary:hover {
+    animation: none;
+  }
+}
+
+.lab-btn-primary:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 3px 8px var(--lab-btn-shadow-active);
+}
+
+.lab-btn-primary:focus-visible {
+  outline: 3px solid var(--lab-btn-ring);
+  outline-offset: 2px;
+}
+
+@keyframes lab-btn-shine {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(120%) skewX(-20deg);
+  }
+}
+
+@keyframes lab-btn-pulse {
+  0% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 0 rgba(255, 193, 7, 0.5);
+  }
+  70% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 10px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
+.lab-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--lab-btn-border);
+  border-radius: 9999px;
+  background: var(--lab-btn-white);
+  color: var(--lab-btn-ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lab-btn-secondary__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 400ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-btn-secondary:hover {
+    border-color: var(--spark-yellow);
+    background: var(--lab-btn-hover-bg);
+    transform: translateY(-2px);
+  }
+  .lab-btn-secondary:hover .lab-btn-secondary__icon {
+    transform: rotate(90deg);
+  }
+}
+
+.lab-btn-secondary:active {
+  transform: scale(0.96);
+  background: var(--lab-btn-active-bg);
+}
+
+.lab-btn-secondary:focus-visible {
+  outline: 3px solid var(--lab-btn-ring);
+  outline-offset: 2px;
+}
+
+.lab-btn-explore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--lab-btn-border);
+  border-radius: 9999px;
+  background: var(--lab-btn-white);
+  color: var(--lab-btn-ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition:
+    background-color 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lab-btn-explore__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 250ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-btn-explore:hover {
+    background: var(--lab-btn-ink);
+    color: var(--lab-btn-white);
+    border-color: var(--lab-btn-ink);
+  }
+  .lab-btn-explore:hover .lab-btn-explore__icon {
+    transform: translateX(4px);
+  }
+}
+
+.lab-btn-explore:active {
+  transform: scale(0.97);
+}
+
+.lab-btn-explore:focus-visible {
+  outline: 3px solid var(--lab-btn-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-btn-primary,
+  .lab-btn-primary__icon,
+  .lab-btn-secondary,
+  .lab-btn-secondary__icon,
+  .lab-btn-explore,
+  .lab-btn-explore__icon {
+    transition: none !important;
+  }
+  .lab-btn-primary::after,
+  .lab-card-group:hover .lab-btn-primary,
+  .lab-btn-primary:hover::after {
+    animation: none !important;
+  }
+  .lab-btn-primary:hover,
+  .lab-btn-primary:active,
+  .lab-btn-secondary:hover,
+  .lab-btn-secondary:active,
+  .lab-btn-explore:hover,
+  .lab-btn-explore:active {
+    transform: none !important;
+  }
+  .lab-btn-primary:hover .lab-btn-primary__icon,
+  .lab-btn-secondary:hover .lab-btn-secondary__icon,
+  .lab-btn-explore:hover .lab-btn-explore__icon {
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Isometric campus — rotation speed slider + fullscreen stage          */
+/* ------------------------------------------------------------------ */
+.lab-rotate-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--spark-yellow);
+}
+
+.lab-rotate-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--spark-yellow);
+  border: 2px solid #111111;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25);
+  transition: transform 180ms ease;
+}
+
+.lab-rotate-slider::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--spark-yellow);
+  border: 2px solid #111111;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25);
+}
+
+.lab-rotate-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.lab-rotate-slider:focus-visible {
+  outline: 2px solid var(--spark-yellow);
+  outline-offset: 4px;
+}
+
+.campus-stage:fullscreen {
+  height: 100vh;
+  width: 100vw;
+  border-radius: 0;
+  border: 0;
+}
+
+.campus-stage:fullscreen .campus-stage-inner {
+  border-radius: 0;
+}

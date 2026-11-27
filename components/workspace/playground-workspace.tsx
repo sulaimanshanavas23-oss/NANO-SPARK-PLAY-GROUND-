@@ -79,7 +79,7 @@ function LaunchCard({
             rel="noreferrer noopener"
             className={buttonClass("primary")}
           >
-            <Play className="h-4 w-4 fill-current" /> Open lab in new tab
+            <Play className="h-4 w-4 fill-current" /> Open lab
             <ArrowUpRight className="h-4 w-4" />
           </a>
           {reason === "blocked" && onRetry && (
@@ -322,14 +322,6 @@ export function PlaygroundWorkspace() {
                     <Maximize2 className="h-4 w-4" />
                   </button>
                 )}
-                <a
-                  href={selected.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className={buttonClass("dark", "sm")}
-                >
-                  Open in new tab <ExternalLink className="h-3.5 w-3.5" />
-                </a>
               </div>
             </div>
 

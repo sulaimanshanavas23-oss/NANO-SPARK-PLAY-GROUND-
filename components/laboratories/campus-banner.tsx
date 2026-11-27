@@ -6,9 +6,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { ContactShadows, RoundedBox } from "@react-three/drei";
 import { useReducedMotion } from "framer-motion";
-import { ArrowRight, GraduationCap, Loader2 } from "lucide-react";
+import { ArrowRight, GraduationCap, Loader2, Play } from "lucide-react";
 import { useWebGLAvailable } from "@/components/shared/webgl";
-import { buttonClass } from "@/components/shared/button";
 import { cn } from "@/src/lib/utils";
 
 function GraduationScene({ animated }: { animated: boolean }) {
@@ -148,8 +147,9 @@ export function CampusBanner({ className }: { className?: string }) {
             </p>
             <Link
               href="/playground"
-              className={cn(buttonClass("primary", "sm"), "mt-4 font-bold")}
+              className={cn("lab-btn-primary", "mt-4 font-bold")}
             >
+              <Play className="lab-btn-primary__icon h-3 w-3 fill-current" />
               Enter playground <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>

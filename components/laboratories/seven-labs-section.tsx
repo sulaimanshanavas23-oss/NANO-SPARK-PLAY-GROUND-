@@ -34,9 +34,10 @@ export function SevenLabsSection() {
           </p>
           <Link
             href="/explore"
-            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-ink/15 bg-white px-5 py-2.5 text-[12.5px] font-semibold text-ink shadow-sm transition-all hover:-translate-y-0.5 hover:border-ink/35"
+            className="lab-btn-explore w-fit shrink-0"
           >
-            Explore all labs <ArrowRight className="h-4 w-4" />
+            Explore all labs
+            <ArrowRight className="lab-btn-explore__icon h-4 w-4" />
           </Link>
         </div>
 

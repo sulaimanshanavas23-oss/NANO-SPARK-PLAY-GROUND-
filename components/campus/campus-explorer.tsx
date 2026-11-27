@@ -35,7 +35,6 @@ function SceneLoading({ height }: { height: string }) {
         height,
       )}
     >
-      <div className="absolute inset-0 dot-grid opacity-40" />
       <div className="relative flex flex-col items-center gap-4">
         <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-ink text-spark-yellow shadow-card">
           <Sparkles className="h-6 w-6 animate-pulse" />
@@ -99,11 +98,13 @@ export function CampusExplorer({
   const webgl = useWebGLAvailable();
   const reduceMotion = useReducedMotion() ?? false;
   const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const openTimer = useRef<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [exploded, setExploded] = useState(defaultExploded);
   const [autoRotate, setAutoRotate] = useState(false);
+  const [rotationSpeed, setRotationSpeed] = useState(0.55);
   const [zoom, setZoom] = useState(0);
   const [resetSignal, setResetSignal] = useState(0);
 
@@ -152,6 +153,7 @@ export function CampusExplorer({
     setViewerOpen(false);
     setExploded(false);
     setAutoRotate(false);
+    setRotationSpeed(0.55);
     setZoom(0);
     setResetSignal((value) => value + 1);
   }
@@ -161,7 +163,7 @@ export function CampusExplorer({
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       } else {
-        await containerRef.current?.requestFullscreen();
+        await stageRef.current?.requestFullscreen();
       }
     } catch {
       /* Fullscreen is a progressive enhancement. */
@@ -171,8 +173,9 @@ export function CampusExplorer({
   return (
     <div ref={containerRef} className="relative">
       <div
+        ref={stageRef}
         className={cn(
-          "group relative w-full overflow-hidden rounded-[28px] border border-ink/10 bg-[#f3f3ee] shadow-[0_30px_90px_-50px_rgba(17,17,17,0.5)]",
+          "campus-stage group relative w-full overflow-hidden rounded-[28px] border border-ink/10 bg-[#f3f3ee] shadow-[0_30px_90px_-50px_rgba(17,17,17,0.5)]",
           height,
         )}
       >
@@ -183,7 +186,8 @@ export function CampusExplorer({
             selectedId={selectedId}
             onSelect={handleSelect}
             exploded={exploded}
-            autoRotate={autoRotate}
+            autoRotate={autoRotate && rotationSpeed > 0}
+            rotationSpeed={rotationSpeed}
             zoom={zoom}
             resetSignal={resetSignal}
             reduceMotion={reduceMotion}
@@ -205,7 +209,7 @@ export function CampusExplorer({
               </span>
             </div>
 
-            <div className="absolute right-4 top-4 z-20 hidden items-center gap-2 sm:flex">
+            <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
               <button
                 onClick={enterFullscreen}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-white/85 text-ink-muted shadow-sm backdrop-blur transition-colors hover:text-ink"
@@ -246,7 +250,11 @@ export function CampusExplorer({
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => setAutoRotate((value) => !value)}
+                onClick={() => {
+                  const next = !autoRotate;
+                  setAutoRotate(next);
+                  if (next && rotationSpeed <= 0) setRotationSpeed(0.55);
+                }}
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                   autoRotate
@@ -259,6 +267,26 @@ export function CampusExplorer({
               >
                 <Rotate3D className="h-3.5 w-3.5" />
               </button>
+              <div className="flex items-center gap-2 pl-1 pr-1.5">
+                <input
+                  type="range"
+                  min={0}
+                  max={2}
+                  step={0.05}
+                  value={rotationSpeed}
+                  onChange={(event) => {
+                    const value = Number(event.target.value);
+                    setRotationSpeed(value);
+                    setAutoRotate(value > 0);
+                  }}
+                  aria-label="Lab rotation speed"
+                  title="Rotation speed"
+                  className="lab-rotate-slider w-14 sm:w-24"
+                />
+                <span className="w-7 text-right text-[10px] font-medium tabular-nums text-white/55">
+                  {rotationSpeed.toFixed(2)}
+                </span>
+              </div>
               <span className="h-4 w-px bg-white/15" />
               <button
                 onClick={() => setZoom((value) => Math.max(0, value - 1))}

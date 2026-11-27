@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Boxes, Star } from "lucide-react";
+import { ArrowUpRight, Boxes, Play, Star } from "lucide-react";
 import type { Lab } from "@/src/lib/labs";
 import { LabGlyph } from "@/components/shared/icons";
 import { Lab3DPreview } from "@/components/laboratories/lab-3d-preview";
@@ -40,7 +40,7 @@ export function LabCard({
   return (
     <div
       className={cn(
-        "group/card relative grid h-full gap-3 rounded-[26px] border border-ink/[0.08] bg-white p-3 transition-all duration-500 hover:-translate-y-1 hover:border-spark-dark/40 hover:shadow-card xl:grid-cols-[42%_minmax(0,1fr)] xl:gap-4 xl:p-3.5",
+        "lab-card-group group/card relative grid h-full gap-3 rounded-[26px] border border-ink/[0.08] bg-white p-3 transition-all duration-500 hover:-translate-y-1 hover:border-spark-dark/40 hover:shadow-card xl:grid-cols-[42%_minmax(0,1fr)] xl:gap-4 xl:p-3.5",
         className,
       )}
     >
@@ -112,30 +112,30 @@ export function LabCard({
             <button
               type="button"
               onClick={() => setViewerOpen(true)}
-              className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink/[0.12] bg-white px-2.5 text-[11px] font-semibold text-ink transition-colors hover:border-ink/30"
+              className="lab-btn-secondary"
               aria-label={`Open 3D preview of ${lab.name}`}
             >
-              <Boxes className="h-3.5 w-3.5" />
+              <Boxes className="lab-btn-secondary__icon h-3.5 w-3.5" />
               3D
             </button>
             {lab.embeddable ? (
               <button
                 type="button"
                 onClick={enterLab}
-                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-spark-yellow px-3.5 text-[11px] font-bold text-ink shadow-[0_10px_20px_-12px_rgba(247,181,0,0.9)] transition-transform hover:-translate-y-0.5"
+                className="lab-btn-primary"
               >
+                <Play className="lab-btn-primary__icon h-3 w-3 fill-current" />
                 Enter Lab
-                <ArrowRight className="h-3.5 w-3.5" />
               </button>
             ) : (
               <a
                 href={lab.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-spark-yellow px-3.5 text-[11px] font-bold text-ink shadow-[0_10px_20px_-12px_rgba(247,181,0,0.9)] transition-transform hover:-translate-y-0.5"
+                className="lab-btn-primary"
               >
+                <Play className="lab-btn-primary__icon h-3 w-3 fill-current" />
                 Open lab
-                <ArrowUpRight className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
