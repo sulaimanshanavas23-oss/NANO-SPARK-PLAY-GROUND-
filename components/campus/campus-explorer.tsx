@@ -271,7 +271,7 @@ export function CampusExplorer({
                 <input
                   type="range"
                   min={0}
-                  max={2}
+                  max={3}
                   step={0.05}
                   value={rotationSpeed}
                   onChange={(event) => {

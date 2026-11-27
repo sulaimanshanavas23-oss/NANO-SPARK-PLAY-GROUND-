@@ -303,14 +303,14 @@ function CentralHub() {
         />
       </mesh>
       <Html center position={[0, 1.08, 0]} zIndexRange={[40, 20]}>
-        <div className="flex w-[132px] flex-col items-center gap-1.5 rounded-2xl border border-ink/10 bg-white/90 px-3 py-2.5 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
+        <div className="flex w-[150px] flex-col items-center gap-1 rounded-2xl border border-ink/10 bg-white/95 px-3 py-2.5 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/branding/nano-spark-mark.png"
+            src="/branding/nano-spark-logo.jpeg"
             alt="Nano Spark"
-            className="h-9 w-9 object-contain"
+            className="h-20 w-20 object-contain"
           />
-          <p className="font-display text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-ink">
+          <p className="font-display text-[9px] font-extrabold uppercase leading-tight tracking-[0.18em] text-ink">
             Nano Spark
             <span className="mt-0.5 block text-[8.5px] font-bold tracking-[0.24em] text-spark-dark">
               Play Ground
@@ -374,7 +374,7 @@ function StationPill({
         onFocus={() => onHover(true)}
         onBlur={() => onHover(false)}
         className={cn(
-          "min-w-[92px] rounded-xl border bg-ink/90 px-2 py-1.5 text-left shadow-[0_8px_30px_rgba(0,0,0,0.22)] transition-colors sm:min-w-[124px] sm:px-2.5",
+          "min-w-[116px] rounded-xl border bg-ink/90 px-2.5 py-2 text-left shadow-[0_8px_30px_rgba(0,0,0,0.22)] transition-colors sm:min-w-[156px] sm:px-3",
           selected || hovered
             ? "border-spark-yellow/50 bg-ink/95"
             : "border-white/10 hover:border-spark-yellow/35",
@@ -383,10 +383,10 @@ function StationPill({
         aria-haspopup="dialog"
         aria-pressed={selected}
       >
-        <span className="block font-mono text-[7.5px] font-semibold uppercase tracking-[0.18em] text-spark-yellow sm:text-[8px]">
+        <span className="block font-mono text-[8.5px] font-semibold uppercase tracking-[0.18em] text-spark-yellow sm:text-[9px]">
           LAB {lab.number}
         </span>
-        <span className="mt-0.5 block whitespace-nowrap text-[10px] font-semibold leading-tight text-white sm:text-[11px]">
+        <span className="mt-1 block whitespace-nowrap text-[12px] font-semibold leading-tight text-white sm:text-[14px]">
           {lab.name}
         </span>
         <span

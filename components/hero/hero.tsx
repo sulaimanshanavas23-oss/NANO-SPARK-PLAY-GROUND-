@@ -78,22 +78,6 @@ export function Hero() {
                 delay={0.22}
                 reduced={reduced}
               />
-              <motion.svg
-                aria-hidden="true"
-                viewBox="0 0 420 14"
-                className="absolute -bottom-2 left-1/2 h-3 w-[78%] -translate-x-1/2 text-spark-yellow sm:-bottom-3"
-                initial={reduced ? false : { pathLength: 0, opacity: 0 }}
-                animate={reduced ? undefined : { pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.9, delay: 0.85 }}
-                fill="none"
-              >
-                <path
-                  d="M4 9C84 3 164 2 244 5C304 7 364 8 416 4"
-                  stroke="currentColor"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                />
-              </motion.svg>
             </span>
           </h1>
 
