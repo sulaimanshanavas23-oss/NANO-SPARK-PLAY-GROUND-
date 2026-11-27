@@ -17,6 +17,7 @@ import { Marquee } from "@/components/shared/marquee";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Reveal } from "@/components/shared/reveal";
 import { SevenLabsSection } from "@/components/laboratories/seven-labs-section";
+import { HardwareShowcase } from "@/components/showcase/hardware-showcase";
 import { LearningPathway } from "@/components/learning-journey/learning-pathway";
 import { buttonClass } from "@/components/shared/button";
 import { CategoryGlyph } from "@/components/shared/icons";
@@ -200,6 +201,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <HardwareShowcase />
 
       <section className="relative overflow-hidden bg-ink text-white">
         <div className="pointer-events-none absolute inset-0 dark-circuit opacity-90" />
