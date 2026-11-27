@@ -31,17 +31,12 @@ import {
 } from "lucide-react";
 import { LabModel } from "@/components/campus/lab-models";
 import { LabGlyph } from "@/components/shared/icons";
-import {
-  getLabComponents,
-  type LabComponentConfig,
-  type LabHotspot,
-} from "@/src/data/labComponents";
+import { getLabComponents, type LabHotspot } from "@/src/data/labComponents";
 import { protocols } from "@/src/data/protocols";
 import { useDeviceQuality } from "@/src/lib/use-device-quality";
 import { useApp } from "@/src/lib/store/app-provider";
 import type { Lab } from "@/src/lib/labs";
 import { cn } from "@/src/lib/utils";
-import { HotspotMarker } from "@/src/components/labs/hotspot-marker";
 import { ComponentInfoPanel } from "@/src/components/labs/component-info-panel";
 import { ComponentLegend } from "@/src/components/labs/component-legend";
 import { ProtocolExplorerPanel } from "@/src/components/labs/protocol-explorer-panel";
@@ -99,15 +94,9 @@ function CameraFocusController({
 
 function ViewerScene({
   lab,
-  config,
-  activeHotspot,
-  onHotspot,
   explode,
 }: {
   lab: Lab;
-  config: LabComponentConfig;
-  activeHotspot: string | null;
-  onHotspot: (hotspot: LabHotspot) => void;
   explode: number;
 }) {
   return (
@@ -132,17 +121,7 @@ function ViewerScene({
       />
 
       <group position={[0, -0.22, 0]}>
-        <LabModel id={lab.id} explode={explode}>
-          {config.kind !== "protocol" &&
-            config.hotspots.map((hotspot) => (
-              <HotspotMarker
-                key={hotspot.id}
-                hotspot={hotspot}
-                active={activeHotspot === hotspot.id}
-                onSelect={() => onHotspot(hotspot)}
-              />
-            ))}
-        </LabModel>
+        <LabModel id={lab.id} explode={explode} />
       </group>
 
       <group position={[0, -0.6, 0]}>
@@ -468,9 +447,6 @@ export function LabModelViewer({
                   >
                     <ViewerScene
                       lab={lab}
-                      config={config}
-                      activeHotspot={activeHotspot}
-                      onHotspot={focusHotspot}
                       explode={explode}
                     />
                   </Suspense>

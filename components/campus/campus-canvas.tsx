@@ -302,17 +302,17 @@ function CentralHub() {
           toneMapped={false}
         />
       </mesh>
-      <Html center position={[0, 1.08, 0]} zIndexRange={[40, 20]}>
-        <div className="flex w-[150px] flex-col items-center gap-1 rounded-2xl border border-ink/10 bg-white/95 px-3 py-2.5 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
+      <Html center position={[0, 1.2, 0]} zIndexRange={[40, 20]}>
+        <div className="flex w-[180px] flex-col items-center gap-1 rounded-2xl border border-ink/10 bg-white/95 px-3 py-3 text-center shadow-[0_18px_50px_-24px_rgba(17,17,17,0.55)] backdrop-blur">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/branding/nano-spark-logo.jpeg"
             alt="Nano Spark"
-            className="h-20 w-20 object-contain"
+            className="h-24 w-24 object-contain"
           />
-          <p className="font-display text-[9px] font-extrabold uppercase leading-tight tracking-[0.18em] text-ink">
+          <p className="font-display text-[10px] font-extrabold uppercase leading-tight tracking-[0.2em] text-ink">
             Nano Spark
-            <span className="mt-0.5 block text-[8.5px] font-bold tracking-[0.24em] text-spark-dark">
+            <span className="mt-0.5 block text-[9px] font-bold tracking-[0.24em] text-spark-dark">
               Play Ground
             </span>
           </p>
