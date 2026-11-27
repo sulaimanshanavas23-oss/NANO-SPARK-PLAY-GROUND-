@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/shared/providers";
 import { Navbar } from "@/components/navigation/navbar";
@@ -73,6 +74,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${baloo.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-white font-sans text-ink antialiased">
+        <Script
+          type="module"
+          src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"
+          strategy="afterInteractive"
+        />
         <Providers>
           <a
             href="#main"
