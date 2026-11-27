@@ -623,24 +623,19 @@ function RoverModel({ children }: { children?: ReactNode }) {
   );
 }
 
-function VehicleModel({ children }: { children?: ReactNode }) {
+function VehicleModel({
+  children,
+  explode = 0,
+}: {
+  children?: ReactNode;
+  explode?: number;
+}) {
   return (
     <group scale={0.94} rotation={[0, 0.4, 0]}>
       {children}
       <RoundedBox args={[1.28, 0.3, 0.68]} radius={0.07} smoothness={3} position={[0, 0.46, 0]}>
         <meshStandardMaterial color="#f3f2ee" metalness={0.35} roughness={0.36} />
       </RoundedBox>
-      <RoundedBox args={[0.72, 0.28, 0.6]} radius={0.06} smoothness={3} position={[-0.05, 0.7, 0]}>
-        <meshStandardMaterial color="#1a1a1a" metalness={0.5} roughness={0.35} />
-      </RoundedBox>
-      <mesh position={[-0.05, 0.71, 0.302]}>
-        <planeGeometry args={[0.5, 0.18]} />
-        <meshStandardMaterial color="#5b97a8" metalness={0.7} roughness={0.15} />
-      </mesh>
-      <mesh position={[-0.05, 0.71, -0.302]}>
-        <planeGeometry args={[0.5, 0.18]} />
-        <meshStandardMaterial color="#5b97a8" metalness={0.7} roughness={0.15} />
-      </mesh>
       <mesh position={[0, 0.33, 0.345]}>
         <boxGeometry args={[1.1, 0.05, 0.01]} />
         <meshStandardMaterial color="#FFC107" emissive="#FFB900" emissiveIntensity={0.5} />
@@ -653,20 +648,48 @@ function VehicleModel({ children }: { children?: ReactNode }) {
         <boxGeometry args={[0.03, 0.08, 0.1]} />
         <meshStandardMaterial color="#fff8dc" emissive="#ffe066" emissiveIntensity={2.8} toneMapped={false} />
       </mesh>
-      <mesh position={[-0.2, 0.89, 0]}>
-        <boxGeometry args={[0.5, 0.04, 0.44]} />
-        <meshStandardMaterial color="#2b2b2b" metalness={0.6} roughness={0.35} />
-      </mesh>
+
+      <group position={[0, explode * 0.18, 0]}>
+        <RoundedBox args={[0.72, 0.28, 0.6]} radius={0.06} smoothness={3} position={[-0.05, 0.7, 0]}>
+          <meshStandardMaterial color="#1a1a1a" metalness={0.5} roughness={0.35} />
+        </RoundedBox>
+        <mesh position={[-0.05, 0.71, 0.302]}>
+          <planeGeometry args={[0.5, 0.18]} />
+          <meshStandardMaterial color="#5b97a8" metalness={0.7} roughness={0.15} />
+        </mesh>
+        <mesh position={[-0.05, 0.71, -0.302]}>
+          <planeGeometry args={[0.5, 0.18]} />
+          <meshStandardMaterial color="#5b97a8" metalness={0.7} roughness={0.15} />
+        </mesh>
+      </group>
+
+      <group position={[0, explode * 0.34, 0]}>
+        <mesh position={[-0.2, 0.89, 0]}>
+          <boxGeometry args={[0.5, 0.04, 0.44]} />
+          <meshStandardMaterial color="#2b2b2b" metalness={0.6} roughness={0.35} />
+        </mesh>
+        <mesh position={[-0.2, 0.95, 0]}>
+          <cylinderGeometry args={[0.18, 0.18, 0.08, 18]} />
+          <meshStandardMaterial color="#FFC107" metalness={0.4} roughness={0.45} />
+        </mesh>
+        <Led color="#FFD54F" position={[0.45, 0.88, 0]} size={0.025} />
+      </group>
+
       {[-0.4, 0, 0.4].map((x) =>
         [-0.4, 0.4].map((z) => (
-          <Wheel key={`${x}-${z}`} position={[x, 0.26, z]} radius={0.2} width={0.14} spin={0.4} />
+          <Wheel
+            key={`${x}-${z}`}
+            position={[
+              x + Math.sign(x) * explode * 0.16,
+              0.26,
+              z + Math.sign(z) * explode * 0.24,
+            ]}
+            radius={0.2}
+            width={0.14}
+            spin={0.4}
+          />
         )),
       )}
-      <mesh position={[-0.2, 0.95, 0]}>
-        <cylinderGeometry args={[0.18, 0.18, 0.08, 18]} />
-        <meshStandardMaterial color="#FFC107" metalness={0.4} roughness={0.45} />
-      </mesh>
-      <Led color="#FFD54F" position={[0.45, 0.88, 0]} size={0.025} />
     </group>
   );
 }
@@ -757,7 +780,15 @@ function RoboticsModel({ children }: { children?: ReactNode }) {
   );
 }
 
-export function LabModel({ id, children }: { id: string; children?: ReactNode }) {
+export function LabModel({
+  id,
+  children,
+  explode = 0,
+}: {
+  id: string;
+  children?: ReactNode;
+  explode?: number;
+}) {
   switch (id) {
     case "arduino-lab":
       return <ArduinoModel>{children}</ArduinoModel>;
@@ -770,7 +801,7 @@ export function LabModel({ id, children }: { id: string; children?: ReactNode })
     case "roverkit-lab":
       return <RoverModel>{children}</RoverModel>;
     case "vehicle-explorer":
-      return <VehicleModel>{children}</VehicleModel>;
+      return <VehicleModel explode={explode}>{children}</VehicleModel>;
     case "robotics-lab":
       return <RoboticsModel>{children}</RoboticsModel>;
     default:
